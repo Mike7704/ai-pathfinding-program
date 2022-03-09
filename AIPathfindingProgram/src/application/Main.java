@@ -1,26 +1,40 @@
 package application;
-	
+
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 
 public class Main extends Application {
+	
+	// Initialise Program
 	@Override
-	public void start(Stage primaryStage) {
+	public void start(Stage stage) {
 		try {
-			BorderPane root = new BorderPane();
-			Scene scene = new Scene(root,400,400);
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-			primaryStage.setScene(scene);
-			primaryStage.show();
-		} catch(Exception e) {
+			AnchorPane root = new AnchorPane();
+			//Image icon = new Image("application\\icon.png");
+			Scene scene = new Scene(root, 1600, 900);
+			
+			stage.setScene(scene);
+			//stage.getIcons().add(icon);
+			stage.setTitle("AI Pathfinder");
+			stage.setResizable(false);
+			stage.setFullScreen(false);
+			stage.show();
+			
+			new Controller(root, scene, stage);
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		launch(args);
 	}
+	
 }
