@@ -3,9 +3,9 @@ package application;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 
-public class Buttons extends Button {
+public class GUI_Button extends Button {
 	
-	public Buttons(String text, double xPos, double yPos, double width, double height, Pos pos, boolean visible) {
+	public GUI_Button(String text, double xPos, double yPos, double width, double height, Pos pos, boolean visible) {
 		setText(text);
 		// Position from center
 		setLayoutX(xPos-(width/2));
