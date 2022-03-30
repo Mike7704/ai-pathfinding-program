@@ -11,12 +11,16 @@ public class Cell extends StackPane {
 	private int xPos, yPos;
 	private double size;
 	private Color color;
+	boolean isAgent, isGoal, isWall;
 	
-	public Cell(int xPos, int yPos, double size, Color color) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isAgent, boolean isGoal, boolean isWall) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
 		this.color = color;
+		this.isAgent = isAgent;
+		this.isGoal = isGoal;
+		this.isWall = isWall;
 		
 		cell.setWidth(size);
 		cell.setHeight(size);
@@ -28,10 +32,21 @@ public class Cell extends StackPane {
 		// Add min size to stack pane so grid pane stays same size
 		setMinSize(size, size);
 		getChildren().addAll(cell);
+		
 	}
 	
-	public void getCell() {
-		getChildren().addAll(cell);
+	public void setAgent(boolean value) {
+		this.isAgent = value;
+		this.setColor(Color.YELLOW);
+	}
+	
+	public void setGoal(boolean value) {
+		this.isGoal = value;
+		this.setColor(Color.GREEN);
+	}
+
+	public void setWall(boolean value) {
+		this.isWall = value;
 	}
 	
 	public void setColor(Color color) {
@@ -48,5 +63,17 @@ public class Cell extends StackPane {
 	
 	public Color getColor() {
 		return color;
+	}
+	
+	public boolean getIsAgent() {
+		return isAgent;
+	}
+	
+	public boolean getIsGoal() {
+		return isGoal;
+	}
+	
+	public boolean getIsWall() {
+		return isWall;
 	}
 }
