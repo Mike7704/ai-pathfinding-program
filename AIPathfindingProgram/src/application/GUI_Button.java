@@ -2,21 +2,23 @@ package application;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public class GUI_Button extends Button {
 	
 	public GUI_Button(String text, double xPos, double yPos, double width, double height, Pos pos, boolean visible) {
 		setText(text);
-		// Position from center
-		setLayoutX(xPos-(width/2));
-		setLayoutY(yPos-(height/2));
+		setFont(Font.font("Verdana", FontWeight.MEDIUM, 11));
+		setLayoutX(xPos);
+		setLayoutY(yPos);
 		setPrefWidth(width);
 		setPrefHeight(height);
-		setAlignment(Pos.CENTER);
+		setAlignment(pos);
 		setVisible(visible);
-		setFocusTraversable(false); // player has to click, disable pressing space/enter
-		//initializeButtonListeners();
-		//setPadding(new Insets(40,40,0,0));
+		//setStyle("-fx-background-color: blue;");
 
 	}
 }

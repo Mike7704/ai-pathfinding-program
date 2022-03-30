@@ -8,16 +8,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 public class Controller {
 	
+	private Scene scene;
 	private int gridSize = 800;
-	private int gridRowsColumns = 20;
+	private int gridRowsColumns = 17;
 	private int cellSize = gridSize / gridRowsColumns;
 	private int speed;
 	private boolean running = false;
@@ -26,44 +29,59 @@ public class Controller {
 	private int goalX;
 	private int goalY;
 	
+	private Rectangle rectBackground = new Rectangle(860, 55, 710, 803);
 	private GridPane grid = new GridPane();
 	private ArrayList<Cell> cells = new ArrayList<Cell>();
 	
-	private Slider gridSizeSlider = new Slider(5, 30, 15);
+	private Slider gridSizeSlider = new Slider(5, 30, 17);
 	private Slider speedSlider = new Slider(0, 4, 1);
 	
 	// Buttons - (text, xPos, yPos, width, height, text align, visible?)
 	private GUI_Button[] button = {
-		new GUI_Button("Start", 930, 100, 140, 30, Pos.CENTER, true),
-		new GUI_Button("Stop", 930, 130, 140, 30, Pos.CENTER, true),
-		new GUI_Button("Reset", 930, 160, 140, 30, Pos.CENTER, true),
+		new GUI_Button("Start", 29, 10, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Stop", 163, 10, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Reset", 297, 10, 133, 45, Pos.CENTER, true),
+		new GUI_Button("Set Start Position", 430, 10, 133, 45, Pos.CENTER, true),
+		new GUI_Button("Set End Position", 563, 10, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Clear Grid", 697, 10, 134, 45, Pos.CENTER, true),
 		
-		new GUI_Button("Depth First Search", 930, 300, 140, 30, Pos.CENTER, true),
-		new GUI_Button("Breadth First Search", 930, 330, 140, 30, Pos.CENTER, true),
-		new GUI_Button("Best First Search", 930, 360, 140, 30, Pos.CENTER, true),
-		new GUI_Button("Dijkstra", 930, 390, 140, 30, Pos.CENTER, true),
-		new GUI_Button("A* Search", 930, 420, 140, 30, Pos.CENTER, true),
+		new GUI_Button("Depth First Search", 880, 90, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Breadth First Search", 1014, 90, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Best First Search", 1148, 90, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Dijkstra", 1282, 90, 134, 45, Pos.CENTER, true),
+		new GUI_Button("A* Search", 1416, 90, 134, 45, Pos.CENTER, true),
 	};
 	// Label - (text, xPos, yPos, width, height, font size, colour, text align, visible?)
 	private Label[] label = {
-		new GUI_Label("Size: 15x15", 910, 762, 180, 30, 20, Color.BLACK, Pos.TOP_LEFT, true),
-		new GUI_Label("Left click to place wall", 910, 560, 180, 30, 20, Color.BLACK, Pos.TOP_LEFT, true),
-		new GUI_Label("Right click to remove wall", 910, 590, 180, 30, 20, Color.BLACK, Pos.TOP_LEFT, true),
-		new GUI_Label("Double left click to place goal", 910, 620, 180, 30, 20, Color.BLACK, Pos.TOP_LEFT, true)
+		new GUI_Label("AI PathFinder", 1215, 30, 380, 45, 30, Color.BLACK, Pos.CENTER, true),
+		new GUI_Label("Size: 17x17", 40, 865, 180, 30, 14, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Algorithm:", 880, 65, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Algorithm Details:", 880, 150, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Time:", 880, 260, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Cells Explored:", 880, 280, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Previous Results:", 880, 320, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Information:", 880, 780, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Left click to place wall", 880, 800, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true),
+		new GUI_Label("Right click to remove wall", 880, 820, 380, 30, 15, Color.BLACK, Pos.TOP_LEFT, true)
 		
 	};
 		
 	public Controller(AnchorPane root, Scene scene, Stage stage) {
+		this.scene = scene;
 		
+		buttonFunctions();
 		generateEnvironemt();
 		generateEnvironmentSizeSlider();
-		generateSpeedSlider();
+		//generateSpeedSlider();
 		
+		rectBackground.setFill(Color.LIGHTGREY);
+		
+		root.getChildren().add(rectBackground);
 		root.getChildren().addAll(button);
 		root.getChildren().addAll(label);
 		root.getChildren().add(grid);
         root.getChildren().add(gridSizeSlider);
-        root.getChildren().add(speedSlider);
+        //root.getChildren().add(speedSlider);
 	}
 	
 	private void generateEnvironemt() {
@@ -71,8 +89,8 @@ public class Controller {
 		cells.clear();
 		grid.getChildren().clear();
 
-		grid.setLayoutX(40);
-		grid.setLayoutY(40);
+		grid.setLayoutX(30);
+		grid.setLayoutY(56);
 		grid.setPrefSize(gridSize, gridSize);
 		
 		// Generate array to store each cell in the environment
@@ -85,21 +103,51 @@ public class Controller {
 		// Add each cell to the grid and give it functions
 		for(int i = 0; i < cells.size(); i++) {
 			grid.add(cells.get(i), cells.get(i).getXPos(), cells.get(i).getYPos());
-			inputEventsManager(cells.get(i));
+			environmentDrawer(cells.get(i));
 		}
 		
 		// Set top right as destination
 		cells.get(gridRowsColumns-1).setGoal(true);
 		
-		// Set top right as destination
-		cells.get(gridRowsColumns*gridRowsColumns-gridRowsColumns).setAgent(true);
+		// Set bottom left as start position
+		cells.get((gridRowsColumns*gridRowsColumns)-gridRowsColumns).setAgent(true);
 	}
 	
-	private void movementManager() {
+	private void buttonFunctions() {
+		button[0].setOnAction(event -> System.out.println("hh"));
+	}
+	
+	// User controls agent for testing
+	private void userAgentControl() {
 		
+	scene.addEventHandler(KeyEvent.KEY_PRESSED, key -> {
+		if (key.getCode() == KeyCode.UP) {
+			direction = 'U';
+		}
+		if (key.getCode() == KeyCode.DOWN) {
+			direction = 'D';
+		}
+		if (key.getCode() == KeyCode.LEFT) {
+			direction = 'L';
+		}
+		if (key.getCode() == KeyCode.RIGHT) {
+			direction = 'R';
+		}
+	});
+		
+	switch (direction) {
+		case 'U':
+			break;
+		case 'D':
+			break;
+		case 'L':
+			break;
+		case 'R':
+			break;
+		}
 	}
 	
-	private void inputEventsManager(Cell cell) {		
+	private void environmentDrawer(Cell cell) {		
 		
 		grid.setOnMouseEntered(event -> {
 			grid.setCursor(Cursor.HAND);
@@ -133,26 +181,27 @@ public class Controller {
 	}
 
 	private void generateEnvironmentSizeSlider() {
-		gridSizeSlider.setPrefSize(400, 30);
-		gridSizeSlider.setLayoutX(990);
-		gridSizeSlider.setLayoutY(762);
+		gridSizeSlider.setPrefSize(600, 30);
+		gridSizeSlider.setLayoutX(130);
+		gridSizeSlider.setLayoutY(860);
 		gridSizeSlider.setShowTickLabels(true);
-		gridSizeSlider.setMajorTickUnit(5);
-		gridSizeSlider.setMinorTickCount(5);
-		gridSizeSlider.setBlockIncrement(5);
+		gridSizeSlider.setMajorTickUnit(1);
+		//gridSizeSlider.setMinorTickCount(5);
+		gridSizeSlider.setBlockIncrement(1);
 		gridSizeSlider.setSnapToTicks(true);
         
 		gridSizeSlider.setOnMouseDragged(event -> {
 			gridRowsColumns = (int) gridSizeSlider.getValue();
 			cellSize = gridSize/gridRowsColumns;
-        	label[0].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
+        	label[1].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
         	generateEnvironemt();
 		});
 		
 		gridSizeSlider.setOnMouseReleased(event -> {
 			gridRowsColumns = (int) gridSizeSlider.getValue();
+			gridSizeSlider.setValue(gridRowsColumns);
 			cellSize = gridSize/gridRowsColumns;
-        	label[0].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
+        	label[1].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
         	generateEnvironemt();
 		});
 	}
