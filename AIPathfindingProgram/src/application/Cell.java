@@ -11,15 +11,15 @@ public class Cell extends StackPane {
 	private int xPos, yPos;
 	private double size;
 	private Color color;
-	boolean isAgent, isGoal, isWall;
+	boolean isStartPos, isEndPos, isWall;
 	
-	public Cell(int xPos, int yPos, double size, Color color, boolean isAgent, boolean isGoal, boolean isWall) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
 		this.color = color;
-		this.isAgent = isAgent;
-		this.isGoal = isGoal;
+		this.isStartPos = isStartPos;
+		this.isEndPos = isEndPos;
 		this.isWall = isWall;
 		
 		cell.setWidth(size);
@@ -35,14 +35,12 @@ public class Cell extends StackPane {
 		
 	}
 	
-	public void setAgent(boolean value) {
-		this.isAgent = value;
-		this.setColor(Color.YELLOW);
+	public void setStartPos(boolean value) {
+		this.isStartPos = value;
 	}
 	
-	public void setGoal(boolean value) {
-		this.isGoal = value;
-		this.setColor(Color.GREEN);
+	public void setEndPos(boolean value) {
+		this.isEndPos = value;
 	}
 
 	public void setWall(boolean value) {
@@ -65,12 +63,12 @@ public class Cell extends StackPane {
 		return color;
 	}
 	
-	public boolean getIsAgent() {
-		return isAgent;
+	public boolean getIsStartPos() {
+		return isStartPos;
 	}
 	
-	public boolean getIsGoal() {
-		return isGoal;
+	public boolean getIsEndPos() {
+		return isEndPos;
 	}
 	
 	public boolean getIsWall() {

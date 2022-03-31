@@ -25,6 +25,9 @@ public class Controller {
 	private int speed;
 	private boolean running = false;
 	
+	private boolean setStartPosition = false;
+	private boolean setEndPosition = false;
+	
 	private char direction;
 	private int goalX;
 	private int goalY;
@@ -43,7 +46,7 @@ public class Controller {
 		new GUI_Button("Reset", 297, 10, 133, 45, Pos.CENTER, true),
 		new GUI_Button("Set Start Position", 430, 10, 133, 45, Pos.CENTER, true),
 		new GUI_Button("Set End Position", 563, 10, 134, 45, Pos.CENTER, true),
-		new GUI_Button("Clear Grid", 697, 10, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Reset Grid", 697, 10, 134, 45, Pos.CENTER, true),
 		
 		new GUI_Button("Depth First Search", 880, 90, 134, 45, Pos.CENTER, true),
 		new GUI_Button("Breadth First Search", 1014, 90, 134, 45, Pos.CENTER, true),
@@ -70,11 +73,14 @@ public class Controller {
 		this.scene = scene;
 		
 		buttonFunctions();
-		generateEnvironemt();
-		generateEnvironmentSizeSlider();
+		generateGrid();
+		generateGridSizeSlider();
 		//generateSpeedSlider();
 		
 		rectBackground.setFill(Color.LIGHTGREY);
+		grid.setLayoutX(30);
+		grid.setLayoutY(56);
+		grid.setPrefSize(gridSize, gridSize);
 		
 		root.getChildren().add(rectBackground);
 		root.getChildren().addAll(button);
@@ -84,14 +90,10 @@ public class Controller {
         //root.getChildren().add(speedSlider);
 	}
 	
-	private void generateEnvironemt() {
+	private void generateGrid() {
 		// Remove all cells
 		cells.clear();
 		grid.getChildren().clear();
-
-		grid.setLayoutX(30);
-		grid.setLayoutY(56);
-		grid.setPrefSize(gridSize, gridSize);
 		
 		// Generate array to store each cell in the environment
 		for(int y = 0; y < gridRowsColumns; y++) {
@@ -103,18 +105,28 @@ public class Controller {
 		// Add each cell to the grid and give it functions
 		for(int i = 0; i < cells.size(); i++) {
 			grid.add(cells.get(i), cells.get(i).getXPos(), cells.get(i).getYPos());
-			environmentDrawer(cells.get(i));
+			gridDrawer(cells.get(i));
 		}
 		
 		// Set top right as destination
-		cells.get(gridRowsColumns-1).setGoal(true);
-		
+		setEndPosition(cells.get(gridRowsColumns-1));
 		// Set bottom left as start position
-		cells.get((gridRowsColumns*gridRowsColumns)-gridRowsColumns).setAgent(true);
+		setStartPosition(cells.get((gridRowsColumns*gridRowsColumns)-gridRowsColumns));
 	}
 	
 	private void buttonFunctions() {
-		button[0].setOnAction(event -> System.out.println("hh"));
+		// Set start position
+		button[3].setOnAction(event -> {
+			setStartPosition = true;
+			setEndPosition = false;
+		});
+		// Set end position
+		button[4].setOnAction(event -> {
+			setStartPosition = false;
+			setEndPosition = true;
+		});
+		// Clear grid
+		button[5].setOnAction(event -> generateGrid());
 	}
 	
 	// User controls agent for testing
@@ -147,7 +159,37 @@ public class Controller {
 		}
 	}
 	
-	private void environmentDrawer(Cell cell) {		
+	private void setStartPosition(Cell cell) {
+		// Remove previous start position
+		for(int i = 0; i < cells.size(); i++) {
+			if(cells.get(i).getIsStartPos()) {
+				cells.get(i).setColor(Color.DARKGREY);
+				cells.get(i).setStartPos(false);
+				break;
+			}
+		}
+		// Set new start position
+		cell.setStartPos(true);
+		cell.setColor(Color.YELLOW);
+		setStartPosition = false;
+	}
+	
+	private void setEndPosition(Cell cell) {
+		// Remove previous end position
+		for(int i = 0; i < cells.size(); i++) {
+			if(cells.get(i).getIsEndPos()) {
+				cells.get(i).setColor(Color.DARKGREY);
+				cells.get(i).setEndPos(false);
+				break;
+			}
+		}
+		// Set new end position
+		cell.setEndPos(true);
+		cell.setColor(Color.GREEN);
+		setEndPosition = false;
+	}
+	
+	private void gridDrawer(Cell cell) {		
 		
 		grid.setOnMouseEntered(event -> {
 			grid.setCursor(Cursor.HAND);
@@ -158,21 +200,29 @@ public class Controller {
 		
 		cell.setOnMousePressed(event -> {
 			cell.setOnDragDetected(mouseEvent -> cell.startFullDrag());
-			if(event.isPrimaryButtonDown() && !cell.isGoal && !cell.isAgent) {
-				cell.setColor(Color.RED);
-				cell.setWall(true);
+			if(event.isPrimaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
+				if(setStartPosition) {
+					setStartPosition(cell);
+				}
+				else if(setEndPosition) {
+					setEndPosition(cell);
+				}
+				else {
+					cell.setColor(Color.RED);
+					cell.setWall(true);
+				}
 			};
-			if(event.isSecondaryButtonDown() && !cell.isGoal && !cell.isAgent) {
+			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
 				cell.setColor(Color.DARKGREY);
 				cell.setWall(false);
 			};
 		});
 		cell.setOnMouseDragEntered(event -> {
-			if(event.isPrimaryButtonDown() && !cell.isGoal && !cell.isAgent) {
+			if(event.isPrimaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
 				cell.setColor(Color.RED);
 				cell.setWall(true);
 			};
-			if(event.isSecondaryButtonDown() && !cell.isGoal && !cell.isAgent) {
+			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
 				cell.setColor(Color.DARKGREY);
 				cell.setWall(false);
 			};
@@ -180,7 +230,7 @@ public class Controller {
 		
 	}
 
-	private void generateEnvironmentSizeSlider() {
+	private void generateGridSizeSlider() {
 		gridSizeSlider.setPrefSize(600, 30);
 		gridSizeSlider.setLayoutX(130);
 		gridSizeSlider.setLayoutY(860);
@@ -194,7 +244,7 @@ public class Controller {
 			gridRowsColumns = (int) gridSizeSlider.getValue();
 			cellSize = gridSize/gridRowsColumns;
         	label[1].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
-        	generateEnvironemt();
+        	generateGrid();
 		});
 		
 		gridSizeSlider.setOnMouseReleased(event -> {
@@ -202,7 +252,7 @@ public class Controller {
 			gridSizeSlider.setValue(gridRowsColumns);
 			cellSize = gridSize/gridRowsColumns;
         	label[1].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
-        	generateEnvironemt();
+        	generateGrid();
 		});
 	}
 	

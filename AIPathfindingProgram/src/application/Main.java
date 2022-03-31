@@ -16,11 +16,9 @@ public class Main extends Application {
 	public void start(Stage stage) {
 		try {
 			AnchorPane root = new AnchorPane();
-			//Image icon = new Image("application\\icon.png");
 			Scene scene = new Scene(root, 1600, 900);
 			
 			stage.setScene(scene);
-			//stage.getIcons().add(icon);
 			stage.setTitle("AI Pathfinder");
 			stage.setResizable(false);
 			stage.setFullScreen(false);

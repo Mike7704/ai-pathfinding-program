@@ -11,7 +11,7 @@ public class GUI_Button extends Button {
 	
 	public GUI_Button(String text, double xPos, double yPos, double width, double height, Pos pos, boolean visible) {
 		setText(text);
-		setFont(Font.font("Verdana", FontWeight.MEDIUM, 11));
+		setFont(Font.font("Arial", FontWeight.NORMAL, 12));
 		setLayoutX(xPos);
 		setLayoutY(yPos);
 		setPrefWidth(width);

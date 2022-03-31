@@ -10,7 +10,7 @@ public class GUI_Label extends Label {
 	
 	public GUI_Label(String text, double xPos, double yPos, double width, double height, int fontSize, Color color, Pos pos, boolean visible) {
 		setText(text);
-		setFont(Font.font("Verdana", FontWeight.MEDIUM, fontSize));
+		setFont(Font.font("Arial", FontWeight.NORMAL, fontSize));
 		setTextFill(color);
 		if (pos == Pos.CENTER) {
 			setLayoutX(xPos-(width/2));
