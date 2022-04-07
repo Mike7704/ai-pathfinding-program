@@ -18,7 +18,14 @@ public class GUI_Button extends Button {
 		setPrefHeight(height);
 		setAlignment(pos);
 		setVisible(visible);
-		//setStyle("-fx-background-color: blue;");
+		setFocusTraversable(false); // Disable selecting buttons using keys
+		
+		
+		//setStyle("-fx-background-color: linear-gradient(white, lightgrey);-fx-border-color:lightgrey;-fx-border-radius: 0.5;");
 
+		setOnMousePressed(event -> {
+			//setStyle("-fx-background-color: linear-gradient(white, lightgrey);-fx-border-color:black;-fx-border-radius: 1;");
+		});
+		
 	}
 }

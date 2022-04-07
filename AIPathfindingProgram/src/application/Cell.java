@@ -11,9 +11,9 @@ public class Cell extends StackPane {
 	private int xPos, yPos;
 	private double size;
 	private Color color;
-	boolean isStartPos, isEndPos, isWall;
+	boolean isStartPos, isEndPos, isWall, isVisited;
 	
-	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
@@ -21,6 +21,7 @@ public class Cell extends StackPane {
 		this.isStartPos = isStartPos;
 		this.isEndPos = isEndPos;
 		this.isWall = isWall;
+		this.isVisited = isVisited;
 		
 		cell.setWidth(size);
 		cell.setHeight(size);
@@ -45,6 +46,10 @@ public class Cell extends StackPane {
 
 	public void setWall(boolean value) {
 		this.isWall = value;
+	}
+	
+	public void setVisited(boolean value) {
+		this.isVisited = value;
 	}
 	
 	public void setColor(Color color) {
@@ -73,5 +78,9 @@ public class Cell extends StackPane {
 	
 	public boolean getIsWall() {
 		return isWall;
+	}
+	
+	public boolean getIsVisitied() {
+		return isVisited;
 	}
 }
