@@ -12,8 +12,9 @@ public class Cell extends StackPane {
 	private double size;
 	private Color color;
 	boolean isStartPos, isEndPos, isWall, isVisited;
+	private int f, g, h; // (A*) f = total cost; g = actual cost; h(heuristic) = estimates cost
 	
-	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited, int f, int g, int h) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
@@ -22,6 +23,9 @@ public class Cell extends StackPane {
 		this.isEndPos = isEndPos;
 		this.isWall = isWall;
 		this.isVisited = isVisited;
+		this.f = f;
+		this.g = g;
+		this.h = h;
 		
 		cell.setWidth(size);
 		cell.setHeight(size);
@@ -82,5 +86,26 @@ public class Cell extends StackPane {
 	
 	public boolean getIsVisitied() {
 		return isVisited;
+	}
+	
+	// A*
+	public void setF(int f) {
+		this.f = f;
+	}
+	public void setG(int g) {
+		this.g = g;
+	}
+	public void setH(int h) {
+		this.h = h;
+	}
+	// A*
+	public int getF() {
+		return f;
+	}
+	public int getG() {
+		return g;
+	}
+	public int getH() {
+		return h;
 	}
 }
