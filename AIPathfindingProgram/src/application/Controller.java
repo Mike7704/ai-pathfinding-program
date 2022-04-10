@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,6 +18,7 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -36,7 +38,7 @@ public class Controller {
 	private int gridSize = 800;
 	private int gridRowsColumns = 17;
 	private int cellSize = gridSize / gridRowsColumns;
-	private String selectedAlgorithm = "Depth First Search";
+	private String selectedAlgorithm = "Random Search";
 	private boolean running = false;
 	private Timeline simTimer;
 	private int simSpeed = 100;
@@ -50,12 +52,13 @@ public class Controller {
 	private Rectangle rectBackground = new Rectangle(860, 55, 710, 803);
 	private GridPane grid = new GridPane();
 	private ArrayList<Cell> cells = new ArrayList<Cell>();
+	private ArrayList<Cell> currentCellsQueue = new ArrayList<Cell>();
+	private ArrayList<Cell> currentCellNeighbours = new ArrayList<Cell>();
 	private Cell startCell;
 	private Cell endCell;
 	private Cell currentCell;
 	private Cell visitedCell;
 	private Cell upNeighbour, downNeighbour, leftNeighbour, rightNeighbour;
-	private ArrayList<Cell> currentCellNeighbours = new ArrayList<Cell>();
 	private int numberOfCells = 289;
 	private int numberOfVisitedCells = 0;
 	private int numberOfWalls = 0;
@@ -76,26 +79,26 @@ public class Controller {
 		new GUI_Button("Set End Position", 563, 10, 134, 45, Pos.CENTER, true),
 		new GUI_Button("Reset Grid", 697, 10, 134, 45, Pos.CENTER, true),
 		
-		new GUI_Button("Depth First Search", 880, 90, 134, 45, Pos.CENTER, true),
-		new GUI_Button("Breadth First Search", 1014, 90, 134, 45, Pos.CENTER, true),
-		new GUI_Button("Best First Search", 1148, 90, 134, 45, Pos.CENTER, true),
-		new GUI_Button("Dijkstra", 1282, 90, 134, 45, Pos.CENTER, true),
-		new GUI_Button("A* Search", 1416, 90, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Random Search", 880, 95, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Depth First Search", 1014, 95, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Breadth First Search", 1148, 95, 134, 45, Pos.CENTER, true),
+		new GUI_Button("Dijkstra", 1282, 95, 134, 45, Pos.CENTER, true),
+		new GUI_Button("A* Search", 1416, 95, 134, 45, Pos.CENTER, true),
 	};
 	// Label - (text, xPos, yPos, width, height, font size, colour, colorBK, text align, visible?)
 	private Label[] label = {
 		new GUI_Label("AI Pathfinder", 1215, 30, 380, 45, 30, Color.BLACK, Color.TRANSPARENT, Pos.CENTER, true),
 		new GUI_Label("Size: 17x17", 30, 863, 80, 25, 14, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Cells: 289", 750, 863, 80, 25, 14, Color.BLACK, Color.TRANSPARENT, Pos.TOP_RIGHT, true),
-		new GUI_Label("Algorithm: " + selectedAlgorithm, 881, 65, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Algorithm Details: Uses a ", 881, 145, 668, 85, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Time: 00:00:000", 881, 260, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells, 881, 280, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Walls: " + numberOfWalls, 881, 300, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Path Length: " + pathLength, 881, 320, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Previous Results:", 881, 360, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Information:", 881, 775, 670, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("This program allows you to run various AI pathfinding algorithms in a grid environment.\nThe AI will find the shortest path between the starting position (red cell) and end position (green cell). You can place and remove walls using left and right mouse buttons on the grid.", 881, 795, 670, 90, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Algorithm: " + selectedAlgorithm, 881, 70, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("The Random Search algorithm involves moving to a neighbouring cell at random. It is not efficient due to its randomness which often results in moving away from the end cell or revisiting cells needlessly.", 881, 150, 668, 85, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Time: 00:00:000", 881, 240, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells, 881, 260, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Walls: " + numberOfWalls, 881, 280, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Path Length: " + pathLength, 881, 300, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Previous Results:", 881, 350, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Information:", 881, 770, 670, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("This program allows you to run various AI pathfinding algorithms in a grid environment.\nThe AI will find the shortest path between the starting position (red cell) and end position (green cell). You can place and remove walls using left and right mouse buttons on the grid.", 881, 790, 670, 90, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 	};
 	
 	// Results table, needs to be dynamic as we will be adding entries
@@ -178,8 +181,8 @@ public class Controller {
 		// Generate array to store each cell in the environment
 		for(int y = 0; y < gridRowsColumns; y++) {
 			for(int x = 0; x < gridRowsColumns; x++) {
-				// xPos, yPos, size, colour, isStartPos, isEndpos , isWall, isVisited, f, g, h
-				cells.add(new Cell(x, y, cellSize, Color.LIGHTGREY, false, false, false, false, 0 ,0 ,0));
+				// xPos, yPos, size, colour, isStartPos, isEndpos , isWall, isVisited, previous cell, f, g, h
+				cells.add(new Cell(x, y, cellSize, Color.LIGHTGREY, false, false, false, false, null, 0 ,0 ,0));
 			}
 		}
 		// Add each cell to the grid and give it functions
@@ -209,6 +212,10 @@ public class Controller {
 	
 	// Get surrounding cells from the current cell
 	private void getNeighbours(Cell cell, int xPos, int yPos) {
+		upNeighbour = cell;
+		downNeighbour = cell;
+		leftNeighbour = cell;
+		rightNeighbour = cell;
 		if (cell.getYPos()>0) {
 			upNeighbour = cells.get(yPos * gridRowsColumns + xPos - gridRowsColumns);
 		}
@@ -229,24 +236,24 @@ public class Controller {
 	}
 	
 	// Checks cell properties
-	private void searchCell() {
+	private void searchCell(Cell cell) {
 		
 		// Track number of visited cells
-		if (!currentCell.isVisited) {
+		if (!cell.isVisited) {
 			numberOfVisitedCells++;
 			label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
 		}
 		
-		currentCell.setColor(Color.DODGERBLUE);	
-		currentCell.setVisited(true);
+		cell.setColor(Color.DODGERBLUE);	
+		cell.setVisited(true);
 		
 		// Keep the start cell visible
-		if (currentCell == startCell) {
-			currentCell.setColor(Color.RED);
+		if (cell == startCell) {
+			cell.setColor(Color.RED);
 		}
 		// Reached the end so stop and record the results to the table
-		if (currentCell == endCell) {
-			currentCell.setColor(Color.GREEN);	
+		if (cell == endCell) {
+			cell.setColor(Color.GREEN);	
 			stopwatch.stop();
 			simTimer.stop();
 			updateResultsTable();
@@ -269,22 +276,22 @@ public class Controller {
 			if(randomInt == 0 && currentCell.getYPos()>0 && !upNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = upNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
-			if(randomInt == 1 && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.isWall) {
+			else if(randomInt == 1 && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = downNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
-			if(randomInt == 2 && currentCell.getXPos()>0 && !leftNeighbour.isWall) {
+			else if(randomInt == 2 && currentCell.getXPos()>0 && !leftNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = leftNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
-			if(randomInt == 3 && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.isWall) {
+			else if(randomInt == 3 && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = rightNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
 
 		}));
@@ -294,61 +301,77 @@ public class Controller {
 	
 	private void searchBreadthFirst() {
 		
-		//https://medium.com/analytics-vidhya/part-i-breadth-first-search-using-grid-dc41a5f41663
+		// https://stackoverflow.com/questions/27768394/breadth-first-search-is-not-returning-the-shortest-path
 		
-		int movesCount = 0;
+		// Add starting cell
+		Queue<Cell> queue = new LinkedList<Cell>(); 
+		queue.add(startCell);
+		numberOfVisitedCells++;
+		pathLength++;
 		
-		simTimer = new Timeline(new KeyFrame(Duration.millis(simSpeed), event -> {
-    		getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
+		simTimer = new Timeline(new KeyFrame(Duration.millis(simSpeed), event -> {	
 			
-    		if (currentCell.getYPos()>0 && !upNeighbour.isWall) {
-				//visitedCell = currentCell;
-				//currentCell = upNeighbour;
-				//searchCell();
-    
-    			
+			// Are there any cells to search
+			if(!queue.isEmpty()) {
+				currentCell = queue.remove();
+				currentCell.setColor(Color.SKYBLUE);
+				
+				// Keep the start cell visible
+				if (currentCell == startCell) {
+					currentCell.setColor(Color.RED);
+				}
+				
+				// Get surrounding cells
+				getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
+				// Search each neighbour
+				for (int i = 0; i < currentCellNeighbours.size(); i++) {
+					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
+					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
+						currentCellNeighbours.get(i).setVisited(true);
+						currentCellNeighbours.get(i).setPreviousCell(currentCell);
+						currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+						queue.add(currentCellNeighbours.get(i));
+						
+						// Track number of visited cells
+						numberOfVisitedCells++;
+						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);	
+					}
+					// Reached the end so stop and record the results to the table
+					if (currentCellNeighbours.get(i) == endCell) {
+						currentCellNeighbours.get(i).setColor(Color.GREEN);	
+						
+						// Draw path from end to start by following previous cell positions
+						while(currentCell != startCell) {
+							currentCell.setColor(Color.YELLOW);
+							currentCell = currentCell.getPreviousCell();
+							pathLength++;
+							label[8].setText("Path Length: " + pathLength);
+						}
+						
+						stopwatch.stop();
+						simTimer.stop();
+						updateResultsTable();
+					}
+				}	
 			}
+			// No cells to search so stop
+			else {
+				stopwatch.stop();
+				simTimer.stop();
+				label[8].setText("Path Length: No Path Found");
+			}
+			
 		}));
 		simTimer.setCycleCount(-1);
 		simTimer.play();
-
-		/*
-	       // Create a queue for BFS
-	       LinkedList<Cell> queue = new LinkedList<Cell>();
-
-	       // Mark the current node as visited and enqueue it
-	       currentCell.setVisited(true);;
-	       queue.add(currentCell.getYPos() * gridRowsColumns + currentCell.getXPos(),currentCell);
-
-	       while (queue.size() != 0)
-	       {
-	           // Dequeue a vertex from queue and print it
-	    	   currentCell = queue.poll();
-	           System.out.print(currentCell+" ");
-
-	           // Get all adjacent vertices of the dequeued vertex s
-	           // If a adjacent has not been visited, then mark it
-	           // visited and enqueue it
-	           Iterator<Integer> i = adjacent_List[currentCell].listIterator();
-	           while (i.hasNext())
-	           {
-	               int n = i.next();
-	               if (!visited[n])
-	               {
-	                   visited[n] = true;
-	                   queue.add(n);
-	               }
-	           }
-	       }
-	       */
 	}
 	
-	/*
-	private int heuristic(int pointA, int pointB) {
-		int d = Math.();
+	
+	private double heuristic(Cell from, Cell to) {
+		return Math.sqrt((from.getXPos()-to.getXPos())*(from.getXPos()-to.getXPos()) + (from.getYPos() - to.getYPos())*(from.getYPos()-to.getYPos()));
 	}
-	*/
-	private void searchAStar() {
+	
+	private void searchAStar1() {
 		/*
 		getNeighbours(currentCell.getXPos(), currentCell.getYPos());
 		
@@ -430,15 +453,37 @@ public class Controller {
 		
 	}
 	
+	private void searchAStar() {
+		// http://wecode4fun.blogspot.com/2015/05/a-algorithm-or-star-algorithm-in-javafx.html
+	}
+	
 	private void gridButtonFunctions() {	
 		// Start 
 		button[0].setOnAction(event -> {
 			running = true;
+			pathLength = 0;
 			currentCell = startCell;
 			clearVisitedCells();
-			searchRandom();
 			stopwatch.start();
 			label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
+			label[8].setText("Path Length: " + pathLength);
+			// Run the selected algorithm
+			if(selectedAlgorithm.equals("Random Search")) {
+				searchRandom();
+			}
+			else if(selectedAlgorithm.equals("Depth First Search")) {
+				//searchDepthFirst();
+			}
+			else if(selectedAlgorithm.equals("Breadth First Search")) {
+				searchBreadthFirst();
+			}
+			else if(selectedAlgorithm.equals("Dijkstra")) {
+				//searchDijkstra();
+			}
+			else if(selectedAlgorithm.equals("A* Search")) {
+				//searchAStar();
+			}
+		
 		});
 		// Stop
 		button[1].setOnAction(event -> {
@@ -483,28 +528,33 @@ public class Controller {
 	private void algorithmButtonFunctions() {
 		// Depth First Search
 		button[6].setOnAction(event -> {
+			selectedAlgorithm = "Random Search";
+			label[3].setText("Algorithm: " + selectedAlgorithm);
+			label[4].setText("The Random Search algorithm involves moving to a neighbouring cell at random. It is not efficient due to its randomness which often results in moving away from the end cell or revisiting cells needlessly.");
+		});
+		// Depth First Search
+		button[7].setOnAction(event -> {
 			selectedAlgorithm = "Depth First Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
+			label[4].setText("The Depth First Search algorithm");
 		});
 		// Breadth First Search
-		button[7].setOnAction(event -> {
+		button[8].setOnAction(event -> {
 			selectedAlgorithm = "Breadth First Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-		});
-		// Best First Search
-		button[8].setOnAction(event -> {
-			selectedAlgorithm = "Best First Search";
-			label[3].setText("Algorithm: " + selectedAlgorithm);
+			label[4].setText("The Breadth First Search algorithm");
 		});
 		// Dijkstra
 		button[9].setOnAction(event -> {
 			selectedAlgorithm = "Dijkstra";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
+			label[4].setText("The Dijkstra algorithm");
 		});
 		// A* Search
 		button[10].setOnAction(event -> {
 			selectedAlgorithm = "A* Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
+			label[4].setText("The A* Search algorithm");
 		});
 	}
 	
@@ -518,22 +568,22 @@ public class Controller {
 			if (key.getCode() == KeyCode.UP && currentCell.getYPos()>0 && !upNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = upNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
 			if (key.getCode() == KeyCode.DOWN && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = downNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
 			if (key.getCode() == KeyCode.LEFT && currentCell.getXPos()>0 && !leftNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = leftNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
 			if (key.getCode() == KeyCode.RIGHT && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.isWall) {
 				visitedCell = currentCell;
 				currentCell = rightNeighbour;
-				searchCell();
+				searchCell(currentCell);
 			}
 		}
 	});
@@ -564,10 +614,12 @@ public class Controller {
 		}
 		*/
 		startCell.setStartPos(false);
+		startCell.setVisited(false);
 		startCell.setColor(Color.LIGHTGREY);
 		
 		// Set new start position
 		cell.setStartPos(true);
+		cell.setVisited(true);
 		cell.setColor(Color.RED);	
 		startCell = cell;
 		setStartPosition = false;
@@ -679,14 +731,14 @@ public class Controller {
 		resultsTableLabel.add(new GUI_Label("Walls", 0, 0, 100, 0, 15, Color.BLACK, Color.DARKGREY, Pos.CENTER, true));
 		resultsTableLabel.add(new GUI_Label("Grid Size", 0, 0, 100, 0, 15, Color.BLACK, Color.DARKGREY, Pos.CENTER, true));
 		
-		resultsTable.setPrefSize(668, 150);
+		resultsTable.setPrefSize(668, 380);
 		resultsTable.setVgap(3);
 		resultsTable.setFocusTraversable(false); // Disable selecting buttons using keys
 		resultsTable.getChildren().addAll(resultsTableLabel);
 		
 		resultsTableScroll.setLayoutX(881);
-		resultsTableScroll.setLayoutY(384);
-		resultsTableScroll.setPrefSize(668, 340);
+		resultsTableScroll.setLayoutY(374);
+		resultsTableScroll.setPrefSize(668, 380);
 		resultsTableScroll.setFocusTraversable(false); // Disable selecting buttons using keys
 		resultsTableScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;-fx-padding: 0;-fx-background-insets: 0; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;-fx-border-color:darkgrey");
 		resultsTableScroll.setHbarPolicy(ScrollBarPolicy.NEVER);

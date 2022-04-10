@@ -11,10 +11,11 @@ public class Cell extends StackPane {
 	private int xPos, yPos;
 	private double size;
 	private Color color;
-	boolean isStartPos, isEndPos, isWall, isVisited;
-	private int f, g, h; // (A*) f = total cost; g = actual cost; h(heuristic) = estimates cost
+	public boolean isStartPos, isEndPos, isWall, isVisited;
+	private Cell previousCell;
+	private int f, g, h; // (A*) f = g + h; g = distance from start to current cell; h = distance from current cell to goal
 	
-	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited, int f, int g, int h) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited, Cell previousCell, int f, int g, int h) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
@@ -23,6 +24,7 @@ public class Cell extends StackPane {
 		this.isEndPos = isEndPos;
 		this.isWall = isWall;
 		this.isVisited = isVisited;
+		this.previousCell = previousCell;
 		this.f = f;
 		this.g = g;
 		this.h = h;
@@ -56,6 +58,10 @@ public class Cell extends StackPane {
 		this.isVisited = value;
 	}
 	
+	public void setPreviousCell(Cell cell) {
+		this.previousCell = cell;
+	}
+	
 	public void setColor(Color color) {
 		cell.setFill(color);
 	}
@@ -86,6 +92,10 @@ public class Cell extends StackPane {
 	
 	public boolean getIsVisitied() {
 		return isVisited;
+	}
+	
+	public Cell getPreviousCell() {
+		return previousCell;
 	}
 	
 	// A*
