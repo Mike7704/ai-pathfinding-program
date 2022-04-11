@@ -46,9 +46,6 @@ public class Controller {
 	private boolean setStartPosition = false;
 	private boolean setEndPosition = false;
 	
-	// Directions
-	private char direction, up, down, left, right;
-	
 	private Rectangle rectBackground = new Rectangle(860, 55, 710, 803);
 	private GridPane grid = new GridPane();
 	private ArrayList<Cell> cells = new ArrayList<Cell>();
@@ -205,9 +202,9 @@ public class Controller {
 	private void clearVisitedCells() {
 		// Clear visited cells and path from last run
 		for(int i = 0; i < cells.size(); i++) {
+			cells.get(i).setVisited(false);
+			cells.get(i).setPreviousCell(null);
 			if (!(cells.get(i).isStartPos || cells.get(i).isEndPos || cells.get(i).isWall)) {
-				cells.get(i).setVisited(false);
-				cells.get(i).setPreviousCell(null);
 				cells.get(i).setColor(Color.LIGHTGREY);
 			}
 		}
@@ -275,6 +272,7 @@ public class Controller {
 			updateResultsTable();
 		}
 		
+		// Keep current cell visible
 		cell.setColor(Color.DODGERBLUE);
 		currentCell.setColor(Color.SKYBLUE);
 		currentCell = cell;
@@ -284,7 +282,9 @@ public class Controller {
 	}
 
 	// AI will randomly move around the grid
-	private void searchRandom() {
+	private void searchRandom() {	
+		// Count starting cell
+		numberOfVisitedCells++; 
 		
 		simTimer = new Timeline(new KeyFrame(Duration.millis(simSpeed), event -> {
     		getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
@@ -469,7 +469,6 @@ public class Controller {
 			label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
 			label[8].setText("Path Length: " + pathLength);
 			label[9].setText("Moves: " + numberOfMoves);
-			numberOfVisitedCells = 1; // Count starting cell
 			// Run the selected algorithm
 			if(selectedAlgorithm.equals("Random Search")) {
 				searchRandom();
@@ -545,7 +544,7 @@ public class Controller {
 		button[8].setOnAction(event -> {
 			selectedAlgorithm = "Breadth First Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-			label[4].setText("The Breadth First Search algorithm");
+			label[4].setText("The Breadth First Search algorithm explores the grid equally in all directions from the starting cell. It will visit each cell only once but the efficiency is hindered by exploring in multiple directions.");
 		});
 		// Dijkstra
 		button[9].setOnAction(event -> {
@@ -582,19 +581,6 @@ public class Controller {
 			}
 		}
 	});
-	
-	/*
-	switch (direction) {
-		case 'U':
-			System.out.println("UP");
-			break;
-		case 'D':
-			break;
-		case 'L':
-			break;
-		case 'R':
-			break;
-		}*/
 	}
 	
 	private void setStartPosition(Cell cell) {
@@ -772,7 +758,7 @@ public class Controller {
 			numberOfCells = gridRowsColumns * gridRowsColumns;
         	label[1].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
         	label[2].setText("Cells: " + numberOfCells);
-        	label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
+        	//label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
         	generateGrid();
 		});
 		
@@ -783,7 +769,7 @@ public class Controller {
 			numberOfCells = gridRowsColumns * gridRowsColumns;
         	label[1].setText("Size: " + gridRowsColumns + "x" + gridRowsColumns);
         	label[2].setText("Cells: " + numberOfCells);
-        	label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
+        	//label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);
         	generateGrid();
 		});
 	}
