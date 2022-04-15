@@ -41,7 +41,7 @@ import javafx.util.Duration;
 public class Controller {
 	
 	private int gridSize = 800;
-	private int gridRowsColumns = 17;
+	private int gridRowsColumns = 15;
 	private int cellSize = gridSize / gridRowsColumns;
 	private String selectedAlgorithm = "Rsandom Search";
 	private boolean running = false;
@@ -50,6 +50,7 @@ public class Controller {
 	
 	private boolean setStartPosition = false;
 	private boolean setEndPosition = false;
+	private int drawWeightValue = 1;
 	
 	private Rectangle rectBackground = new Rectangle(860, 55, 710, 803);
 	private GridPane grid = new GridPane();
@@ -60,15 +61,13 @@ public class Controller {
 	private Cell endCell;
 	private Cell currentCell;
 	private Cell upNeighbour, downNeighbour, leftNeighbour, rightNeighbour;
-	private int numberOfCells = 289;
+	private int numberOfCells = 225;
 	private int numberOfVisitedCells = 0;
 	private int numberOfMoves = 0;
 	private int numberOfWalls = 0;
 	private int pathLength = 0;
 	
-	private Slider gridSizeSlider = new Slider(5, 30, 17);
-	private Slider speedSlider = new Slider(0, 4, 1);
-	
+	private Slider gridSizeSlider = new Slider(5, 30, 15);	
 	private FlowPane resultsTable = new FlowPane();
 	private ScrollPane resultsTableScroll = new ScrollPane();
 
@@ -92,28 +91,29 @@ public class Controller {
 	// Label - (text, xPos, yPos, width, height, font size, colour, colorBK, text align, visible?)
 	private Label[] label = {
 		new GUI_Label("AI Pathfinder", 1215, 30, 380, 45, 30, Color.BLACK, Color.TRANSPARENT, Pos.CENTER, true),
-		new GUI_Label("Size: 17x17", 30, 863, 80, 25, 14, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Cells: 289", 750, 863, 80, 25, 14, Color.BLACK, Color.TRANSPARENT, Pos.TOP_RIGHT, true),
+		new GUI_Label("Size: 15x15", 30, 863, 80, 25, 14, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Cells: 225", 750, 863, 80, 25, 14, Color.BLACK, Color.TRANSPARENT, Pos.TOP_RIGHT, true),
 		new GUI_Label("Algorithm: " + selectedAlgorithm, 881, 70, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("The Random Search algorithm involves moving to a neighbouring cell at random. It is not efficient due to its randomness which often results in moving away from the end cell or revisiting cells needlessly.", 881, 150, 668, 85, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("The Random Search algorithm involves moving to a neighbouring cell at random. It doesn't guarantee the shortest path and is not efficient due to its randomness which often results in moving away from the end cell or revisiting cells needlessly.", 881, 150, 668, 85, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Time: 00:00:000", 881, 250, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells, 881, 290, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Walls: " + numberOfWalls, 881, 310, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Path Length: " + pathLength, 881, 230, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Moves OPERATIONS: " + numberOfMoves, 881, 270, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Previous Results:", 881, 350, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("Cell Labels:", 1448, 230, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("Show Cell Labels:", 1216, 230, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("[F = Bottom] [G = Top Left] [H = Top Right]", 1216, 310, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Information:", 881, 770, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("This program allows you to run various AI pathfinding algorithms in a grid environment.\nThe AI will find the shortest path between the starting position (red cell) and end position (green cell). You can place and remove walls using left and right mouse buttons on the grid.", 881, 790, 670, 90, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("This program allows you to run and monitor various AI pathfinding algorithms in a grid environment.\nThe AI will find the shortest path between the starting position (red cell) and end position (green cell). Input: [Left Click = Place Wall] [Mouse Wheel = Add Weight] [Right Click = Remove Wall/Weight].", 881, 790, 670, 90, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 	};
 	
 	// Results table, needs to be dynamic as we will be adding entries
 	private ArrayList<GUI_Label> resultsTableLabel = new ArrayList<GUI_Label>();
 	
 	private CheckBox[] costCheckBoxes = {
-		new CheckBox("Show F Cost"),
-		new CheckBox("Show G Cost"),
-		new CheckBox("Show H Cost")
+		new CheckBox("F Cost - Total cost of G and H"),
+		new CheckBox("G Cost - Distance from start to current cell"),
+		new CheckBox("H Cost - Distance from current cell to goal")
 	};
 	
 	// Timer
@@ -164,11 +164,11 @@ public class Controller {
 		userAgentControl(scene);
 		gridButtonFunctions();
 		algorithmButtonFunctions();
+		generateCheckBoxes();
 		generateGrid();
 		generateGridSizeSlider();
 		//generateSpeedSlider();
 		generateResultsTable();
-		generateCheckBoxes();
 		
 		rectBackground.setFill(Color.LIGHTGREY);
 		grid.setLayoutX(30);
@@ -195,8 +195,8 @@ public class Controller {
 		// Generate array to store each cell in the environment
 		for(int y = 0; y < gridRowsColumns; y++) {
 			for(int x = 0; x < gridRowsColumns; x++) {
-				// xPos, yPos, size, colour, isStartPos, isEndpos , isWall, isVisited, previous cell, f, g, h
-				cells.add(new Cell(x, y, cellSize, Color.LIGHTGREY, false, false, false, false, null, 1 ,0 ,0));
+				// xPos, yPos, size, colour, isStartPos, isEndpos , isWall, isVisited, isWeight, previous cell, weightValue, f cost, g cost, h cost
+				cells.add(new Cell(x, y, cellSize, Color.LIGHTGREY, false, false, false, false, false, null, 0, 1 ,1 ,0));
 			}
 		}
 		// Add each cell to the grid and give it functions
@@ -222,6 +222,13 @@ public class Controller {
 			cells.get(i).setPreviousCell(null);
 			if (!(cells.get(i).isStartPos || cells.get(i).isEndPos || cells.get(i).isWall)) {
 				cells.get(i).setColor(Color.LIGHTGREY);
+			}
+			if (!cells.get(i).isWeight && !(cells.get(i) == startCell)) {
+				cells.get(i).setCostG(1);
+			}
+			if (cells.get(i).isWeight) {
+				cells.get(i).setCostG(cells.get(i).getWeightValue());
+				setCellWeightColour(cells.get(i));
 			}
 		}
 		numberOfVisitedCells = 0;
@@ -273,7 +280,7 @@ public class Controller {
 		
 		// Track number of visited cells
 		if (!cell.isVisited) {
-			cell.setColor(Color.DODGERBLUE);	
+			cell.setColor(Color.DEEPSKYBLUE);	
 			cell.setVisited(true);
 			cell.setPreviousCell(currentCell);
 			numberOfVisitedCells++;
@@ -352,7 +359,7 @@ public class Controller {
 					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
 						currentCellNeighbours.get(i).setVisited(true);
 						currentCellNeighbours.get(i).setPreviousCell(currentCell);
-						currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
 						queue.add(currentCellNeighbours.get(i));
 						
 						// Track number of visited cells
@@ -445,7 +452,7 @@ public class Controller {
 					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
 						//currentCellNeighbours.get(i).setVisited(true);
 						currentCellNeighbours.get(i).setPreviousCell(currentCell);
-						currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
 						stack.push(currentCellNeighbours.get(i));
 						
 						// Track number of visited cells
@@ -481,12 +488,18 @@ public class Controller {
 		simTimer.play();
 	}
 	
+	int distance = 0;
 	private void searchDijkstra() {
 		
 		// https://www.javatpoint.com/dijkstra-algorithm-java
+			
+//		for(int i = 0; i < cells.size(); i++) {
+//			cells.get(i).setCostF(1);
+//		}
+//		startCell.setCostF(0);
 		
 		// Uses a priority queue to follow path with best cost by comparing costs of cells
-		PriorityQueue<Cell> queue = new PriorityQueue<Cell>(numberOfCells, (cellA,cellB) -> cellA.getCostF() - cellB.getCostF());
+		PriorityQueue<Cell> queue = new PriorityQueue<Cell>(numberOfCells, (cellA,cellB) -> cellA.getCostG() - cellB.getCostG());
 		// Add starting cell to queue
 		queue.add(startCell);
 		
@@ -510,35 +523,40 @@ public class Controller {
 					updateResultsTable();
 				}
 				
+				// Highlight current cell
+				if(!queue.isEmpty()) {
+					queue.peek().setColor(Color.ORANGE);
+				}
+				// Keep the start and end cell visible
+				startCell.setColor(Color.RED);
+				endCell.setColor(Color.GREEN);
+				
 				// Visit surrounding cells
 				getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
 				// Search each neighbour
 				for (int i = 0; i < currentCellNeighbours.size(); i++) {
 					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
 					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
-						currentCellNeighbours.get(i).setVisited(true);
-						currentCellNeighbours.get(i).setPreviousCell(currentCell);
-						currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+						distance = (currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
 						
-						int newDistance = currentCell.getCostF() + currentCellNeighbours.get(i).getCostF();
-						if(newDistance < currentCell.getCostF()) {
-							currentCellNeighbours.get(i).setCostF(newDistance);
-							currentCell = currentCellNeighbours.get(i);
-							queue.add(currentCell);
+						if(distance >= currentCellNeighbours.get(i).getCostG()) {
+							currentCellNeighbours.get(i).setVisited(true);
+							currentCellNeighbours.get(i).setPreviousCell(currentCell);
+							currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
+							currentCellNeighbours.get(i).setCostG(distance);
+							
+							// Show weighted cells
+							if(currentCellNeighbours.get(i).isWeight) {
+								currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+							}
 						}
+						queue.add(currentCellNeighbours.get(i));
 						
 						// Track number of visited cells
 						numberOfVisitedCells++;
-						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);	
+						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);						
 					}
-					// Reached the end so stop and record the results to the table
-					if (currentCellNeighbours.get(i) == endCell) {
-						currentCellNeighbours.get(i).setColor(Color.GREEN);					
-						getPath();					
-						stopwatch.stop();
-						simTimer.stop();
-						updateResultsTable();
-					}
+					
 				}
 				// Keep the start cell visible
 				startCell.setColor(Color.RED);
@@ -581,7 +599,7 @@ public class Controller {
 			closedSet.get(i).setColor(Color.SKYBLUE);
 		}
 		for(int i = 0; i < openSet.size(); i++) {
-			openSet.get(i).setColor(Color.DODGERBLUE);
+			openSet.get(i).setColor(Color.DEEPSKYBLUE);
 		}
 		
 		while(running) {
@@ -626,7 +644,7 @@ public class Controller {
 						
 						// Make guess
 						//neighbour.setH(heuristic(neighbour,endCell));
-						neighbour.setCostF(neighbour.getCostG() + neighbour.getCostH());
+						//neighbour.setCostF(neighbour.getCostG() + neighbour.getCostH());
 						
 					}
 					
@@ -646,6 +664,7 @@ public class Controller {
 	private void searchAStar() {
 		// http://wecode4fun.blogspot.com/2015/05/a-algorithm-or-star-algorithm-in-javafx.html
 		// https://en.wikipedia.org/wiki/A*_search_algorithms
+		// https://www.geeksforgeeks.org/a-search-algorithm/
 		
 		ArrayList<Cell> openSet = new ArrayList<Cell>();
 		PriorityQueue<Cell> closedSet = new PriorityQueue<Cell>();
@@ -681,7 +700,7 @@ public class Controller {
 					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
 						//currentCellNeighbours.get(i).setVisited(true);
 						currentCellNeighbours.get(i).setPreviousCell(currentCell);
-						currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
 						openSet.add(currentCellNeighbours.get(i));
 						
 						// Track number of visited cells
@@ -772,31 +791,31 @@ public class Controller {
 		button[6].setOnAction(event -> {
 			selectedAlgorithm = "Random Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-			label[4].setText("The Random Search algorithm involves moving to a neighbouring cell at random. It is not efficient due to its randomness which often results in moving away from the end cell or revisiting cells needlessly.");
+			label[4].setText("The Random Search algorithm involves moving to a neighbouring cell at random. It doesn't guarantee the shortest path and is not efficient due to its randomness which often results in moving away from the end cell or revisiting cells needlessly.");
 		});
 		// Depth First Search
 		button[7].setOnAction(event -> {
 			selectedAlgorithm = "Depth First Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-			label[4].setText("The Depth First Search algorithm");
+			label[4].setText("The Depth First Search algorithm uses a backtracking technique by following an unexplored path until it reaches a dead end - a common technique used by humans to solve a maze. A stack is used to track the current path but doesn't guarantee the shortest path and backtracking hinders efficiency.");
 		});
 		// Breadth First Search
 		button[8].setOnAction(event -> {
 			selectedAlgorithm = "Breadth First Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-			label[4].setText("The Breadth First Search algorithm explores the grid equally in all directions from the starting cell. It will visit each cell only once by using a queue to keep track of encountered yet unvisited cells. The efficiency is hindered by exploring in every direction.");
+			label[4].setText("The Breadth First Search algorithm explores the grid equally in all directions from the starting cell. It will visit each cell only once by using a queue to keep track of encountered yet unvisited cells. It guarantees the shortest path but the efficiency is hindered by exploring in every direction equally.");
 		});
 		// Dijkstra
 		button[9].setOnAction(event -> {
 			selectedAlgorithm = "Dijkstra";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-			label[4].setText("The Dijkstra algorithm");
+			label[4].setText("Dijkstra's algorithm is similar to Breadth First Search in the way it explores in all directions but considers weight (distance) by utilizing a priority queue. This means it will explore cells with lower weights first and return the shortest and lowest cost path.");
 		});
 		// A* Search
 		button[10].setOnAction(event -> {
 			selectedAlgorithm = "A* Search";
 			label[3].setText("Algorithm: " + selectedAlgorithm);
-			label[4].setText("The A* Search algorithm");
+			label[4].setText("The A* Search algorithm is similar to Dijkstra's algorithm by also using a priority queue. However it is informed of the environment meaning it can calculate the distance not only from the start to current cell, but also between the current and end cell - letting it estimate the lowest cost path to search.");
 		});
 	}
 	
@@ -842,6 +861,7 @@ public class Controller {
 		cell.setStartPos(true);
 		cell.setVisited(true);
 		cell.setColor(Color.RED);	
+		cell.setCostG(0);
 		startCell = cell;
 		setStartPosition = false;
 	}
@@ -877,6 +897,34 @@ public class Controller {
 			grid.setCursor(Cursor.DEFAULT);
 		});
 		
+		// Set weight value with mouse wheel
+		cell.setOnScroll(event -> {
+			// Clear last run visited cells
+			if(!(numberOfVisitedCells == 0)) {
+				clearVisitedCells();
+			}
+						
+			if(!cell.isStartPos && !cell.isEndPos  && !cell.isWall) {
+				// Scroll up or down changes weight value
+				if(event.getDeltaY() >= 1 && cell.getCostG() <= 100) {
+					cell.setCostG(cell.getCostG()+1);
+				}
+				if(event.getDeltaY() <= -1 && cell.getCostG() > 1) {
+					cell.setCostG(cell.getCostG()-1);
+				}
+				drawWeightValue = cell.getCostG();
+				cell.setCostG(drawWeightValue);
+				cell.setWeightValue(cell.getCostG());
+				if(cell.getCostG()!=1) {
+					cell.setWeight(true);
+				}
+				else {
+					cell.setWeight(false);
+				}
+				setCellWeightColour(cell);
+			}
+		});
+		
 		cell.setOnMousePressed(event -> {
 			// Clear last run visited cells
 			if(!(numberOfVisitedCells == 0)) {
@@ -897,17 +945,32 @@ public class Controller {
 				else {
 					cell.setColor(Color.GREY);
 					cell.setWall(true);
+					cell.setCostG(1);
+					cell.setWeightValue(cell.getCostG());
 					numberOfWalls += 1;
 					label[7].setText("Walls: " + numberOfWalls);
 				}
 			};
 			// Right mouse click removes walls
-			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos && cell.isWall) {
+			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
 				cell.setColor(Color.LIGHTGREY);
-				cell.setWall(false);
-				numberOfWalls -= 1;
-				label[7].setText("Walls: " + numberOfWalls);
+				cell.setCostG(1);
+				cell.setWeightValue(cell.getCostG());
+				cell.setWeight(false);
+				if(cell.isWall) {
+					numberOfWalls -= 1;
+					label[7].setText("Walls: " + numberOfWalls);
+					cell.setWall(false);
+				}
 			};
+			
+			// Middle mouse click adds weight to grid
+			if(event.isMiddleButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall && !cell.isWeight) {
+				cell.setCostG(drawWeightValue);
+				cell.setWeightValue(cell.getCostG());
+				cell.setWeight(true);
+				setCellWeightColour(cell);
+			}
 		});
 		
 		// Allow user to drag the mouse to draw on the grid
@@ -916,19 +979,50 @@ public class Controller {
 			if(event.isPrimaryButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall) {
 				cell.setColor(Color.GREY);
 				cell.setWall(true);
+				cell.setCostG(1);
+				cell.setWeightValue(cell.getCostG());
 				numberOfWalls += 1;
 				label[7].setText("Walls: " + numberOfWalls);
 			};
-			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos  && cell.isWall) {
+			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
 				cell.setColor(Color.LIGHTGREY);
-				cell.setWall(false);
-				numberOfWalls -= 1;
-				label[7].setText("Walls: " + numberOfWalls);
+				cell.setCostG(1);
+				cell.setWeightValue(cell.getCostG());
+				cell.setWeight(false);
+				if(cell.isWall) {
+					numberOfWalls -= 1;
+					label[7].setText("Walls: " + numberOfWalls);
+					cell.setWall(false);
+				}
 			};
+			
+			// Middle mouse click adds weight to grid
+			if(event.isMiddleButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall && !cell.isWeight) {
+				cell.setCostG(drawWeightValue);
+				cell.setWeightValue(cell.getCostG());
+				cell.setWeight(true);
+				setCellWeightColour(cell);
+			}
 		});
 		
 	}
 
+	// Colour cells with higher weight darker
+	private void setCellWeightColour(Cell cell) {
+		if(cell.getCostG()==1) {
+			cell.setColor(Color.LIGHTGREY);
+		}
+		else if(cell.getCostG()<10) {
+			cell.setColor(Color.web("#FFDCA2"));
+		}
+		else if(cell.getCostG()>=10 & cell.getCostG()<25) {
+			cell.setColor(Color.web("#FFBE72"));
+		}
+		else if(cell.getCostG()>=25) {
+			cell.setColor(Color.web("#FD8F52"));
+		}
+	}
+	
 	// When end point is reached, we add the result to the results table
 	private void updateResultsTable() {
 		resultsTable.getChildren().clear();
@@ -1018,21 +1112,22 @@ public class Controller {
 	private void generateCheckBoxes() {
 		
 		for(int i = 0; i < costCheckBoxes.length; i++) {
+			costCheckBoxes[i].setPrefWidth(334);
 			costCheckBoxes[i].setFont(Font.font("Arial", FontWeight.NORMAL, 15));
 			costCheckBoxes[i].setTextFill(Color.BLACK);
-			costCheckBoxes[i].setAlignment(Pos.CENTER_RIGHT);
+			costCheckBoxes[i].setAlignment(Pos.TOP_RIGHT);
 			costCheckBoxes[i].setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT); // Check box on right
 			costCheckBoxes[i].setFocusTraversable(false); // Disable selecting buttons using keys
-		
+			costCheckBoxes[i].setSelected(true);
 			costCheckBoxes[i].setOnMouseClicked(event -> {
 				showCellCostLabels();
 			});
 		}
-		costCheckBoxes[0].setLayoutX(1436);
+		costCheckBoxes[0].setLayoutX(1216);
 		costCheckBoxes[0].setLayoutY(250);			
-		costCheckBoxes[1].setLayoutX(1434);
+		costCheckBoxes[1].setLayoutX(1216);
 		costCheckBoxes[1].setLayoutY(270);			
-		costCheckBoxes[2].setLayoutX(1434);
+		costCheckBoxes[2].setLayoutX(1216);
 		costCheckBoxes[2].setLayoutY(290);			
 	}
 	

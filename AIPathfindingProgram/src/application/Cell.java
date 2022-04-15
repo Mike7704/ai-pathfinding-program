@@ -15,12 +15,12 @@ public class Cell extends StackPane {
 	private int xPos, yPos;
 	private double size;
 	private Color color;
-	public boolean isStartPos, isEndPos, isWall, isVisited;
+	public boolean isStartPos, isEndPos, isWall, isWeight, isVisited;
 	private Cell previousCell;
-	private int costF, costG, costH; // (A*) f = g + h; g = distance from start to current cell; h = distance from current cell to goal
+	private int weightValue, costF, costG, costH; // (A*) f = g + h; g = distance from start to current cell; h = distance from current cell to goal
 	private GUI_Label costFLabel, costGLabel, costHLabel;
 		
-	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited, Cell previousCell, int costF, int costG, int costH) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isWeight, boolean isVisited, Cell previousCell, int weightValue, int costF, int costG, int costH) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
@@ -28,8 +28,10 @@ public class Cell extends StackPane {
 		this.isStartPos = isStartPos;
 		this.isEndPos = isEndPos;
 		this.isWall = isWall;
+		this.isWeight = isWeight;
 		this.isVisited = isVisited;
 		this.previousCell = previousCell;
+		this.weightValue = weightValue;
 		this.costF = costF;
 		this.costG = costG;
 		this.costH = costH;
@@ -111,18 +113,37 @@ public class Cell extends StackPane {
 		return previousCell;
 	}
 	
+	// Weight
+	public void setWeightValue(int weightValue) {
+		this.weightValue = weightValue;
+	}
+	
+	public int getWeightValue() {
+		return weightValue;
+	}
+	
+	public void setWeight(boolean value) {
+		this.isWeight = value;
+	}
+	
+	public boolean getIsWeight() {
+		return isWeight;
+	}
+	
 	// A* cost values
-	public void setCostF(int costF) {
-		this.costF = costF;
+	public void setCostF() {
+		this.costF = costG + costH;
 		costFLabel.setText(costF + "");
 	}
 	public void setCostG(int costG) {
 		this.costG = costG;
 		costGLabel.setText(costG + "");
+		setCostF();
 	}
 	public void setCostH(int costH) {
 		this.costH = costH;
 		costHLabel.setText(costH + "");
+		setCostF();
 	}
 	// A*
 	public int getCostF() {
