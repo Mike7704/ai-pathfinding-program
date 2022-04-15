@@ -10,7 +10,7 @@ import javafx.scene.text.FontWeight;
 
 public class GUI_Label extends Label {
 	
-	public GUI_Label(String text, double xPos, double yPos, double width, double height, int fontSize, Color color, Color colorBK, Pos pos, boolean visible) {
+	public GUI_Label(String text, double xPos, double yPos, double width, double height, double fontSize, Color color, Color colorBK, Pos pos, boolean visible) {
 		setText(text);
 		setFont(Font.font("Arial", FontWeight.NORMAL, fontSize));
 		setTextFill(color);

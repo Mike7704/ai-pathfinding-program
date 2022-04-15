@@ -1,5 +1,9 @@
 package application;
 
+import java.util.ArrayList;
+
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -13,9 +17,10 @@ public class Cell extends StackPane {
 	private Color color;
 	public boolean isStartPos, isEndPos, isWall, isVisited;
 	private Cell previousCell;
-	private int f, g, h; // (A*) f = g + h; g = distance from start to current cell; h = distance from current cell to goal
-	
-	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited, Cell previousCell, int f, int g, int h) {
+	private int costF, costG, costH; // (A*) f = g + h; g = distance from start to current cell; h = distance from current cell to goal
+	private GUI_Label costFLabel, costGLabel, costHLabel;
+		
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isVisited, Cell previousCell, int costF, int costG, int costH) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
@@ -25,9 +30,9 @@ public class Cell extends StackPane {
 		this.isWall = isWall;
 		this.isVisited = isVisited;
 		this.previousCell = previousCell;
-		this.f = f;
-		this.g = g;
-		this.h = h;
+		this.costF = costF;
+		this.costG = costG;
+		this.costH = costH;
 		
 		cell.setWidth(size);
 		cell.setHeight(size);
@@ -39,6 +44,14 @@ public class Cell extends StackPane {
 		// Add min size to stack pane so grid pane stays same size
 		setMinSize(size, size);
 		getChildren().addAll(cell);
+		
+		costGLabel = new GUI_Label(costG + "", 0, 0, size*0.8, size*0.8, size*0.25, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true);
+		costHLabel = new GUI_Label(costH + "", 0, 0, size*0.8, size*0.8, size*0.25, Color.BLACK, Color.TRANSPARENT, Pos.TOP_RIGHT, true);
+		costFLabel = new GUI_Label(costF + "", 0, 0, size*0.8, size*0.8, size*0.25, Color.BLACK, Color.TRANSPARENT, Pos.BOTTOM_CENTER, true);	
+		costGLabel.setOpacity(0.5);
+		costHLabel.setOpacity(0.5);
+		costFLabel.setOpacity(0.5);
+		//getChildren().addAll(costGLabel,costHLabel,costFLabel);
 		
 	}
 	
@@ -98,24 +111,47 @@ public class Cell extends StackPane {
 		return previousCell;
 	}
 	
+	// A* cost values
+	public void setCostF(int costF) {
+		this.costF = costF;
+		costFLabel.setText(costF + "");
+	}
+	public void setCostG(int costG) {
+		this.costG = costG;
+		costGLabel.setText(costG + "");
+	}
+	public void setCostH(int costH) {
+		this.costH = costH;
+		costHLabel.setText(costH + "");
+	}
 	// A*
-	public void setF(int f) {
-		this.f = f;
+	public int getCostF() {
+		return costF;
 	}
-	public void setG(int g) {
-		this.g = g;
+	public int getCostG() {
+		return costG;
 	}
-	public void setH(int h) {
-		this.h = h;
+	public int getCostH() {
+		return costH;
 	}
-	// A*
-	public int getF() {
-		return f;
+	
+	// Show/hide costs
+	public void showCostF(boolean show) {
+		getChildren().remove(costFLabel);
+		if(show) {
+			getChildren().add(costFLabel);
+		}
 	}
-	public int getG() {
-		return g;
+	public void showCostG(boolean show) {
+		getChildren().remove(costGLabel);
+		if(show) {
+			getChildren().add(costGLabel);
+		}
 	}
-	public int getH() {
-		return h;
+	public void showCostH(boolean show) {
+		getChildren().remove(costHLabel);
+		if(show) {
+			getChildren().add(costHLabel);
+		}
 	}
 }
