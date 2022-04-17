@@ -99,7 +99,7 @@ public class Controller {
 		new GUI_Label("Show Cell Labels:", 1216, 230, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("[F = Bottom] [G = Top Left] [H = Top Right]", 1216, 310, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 		new GUI_Label("Information:", 881, 770, 380, 25, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
-		new GUI_Label("This program allows you to run and monitor various AI pathfinding algorithms in a grid environment.\nThe AI will find the shortest path between the starting position (red cell) and end position (green cell). Input: [Left Click = Place Wall] [Mouse Wheel = Add Weight] [Right Click = Remove Wall/Weight].", 881, 790, 670, 90, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
+		new GUI_Label("This program allows you to run and monitor various AI pathfinding algorithms in a grid environment.\nThe AI will find a path between the starting position (red cell) and end position (green cell).\nInput: [Left Click = Place Wall] [Mouse Wheel = Add Weight] [Right Click = Remove Wall/Weight].", 881, 790, 670, 90, 15, Color.BLACK, Color.TRANSPARENT, Pos.TOP_LEFT, true),
 	};
 	// Results table, needs to be dynamic as we will be adding entries
 	private ArrayList<GUI_Label> resultsTableLabel = new ArrayList<GUI_Label>();
@@ -284,6 +284,7 @@ public class Controller {
 	
 	// Checks cell properties
 	private void searchCell(Cell cell) {
+				
 		// Track number of visited cells
 		if (!cell.getIsVisited()) {
 			cell.setColor(Color.DEEPSKYBLUE);	
@@ -296,6 +297,7 @@ public class Controller {
 		// Reached the end so stop and record the results to the table
 		if (cell == endCell) {
 			cell.setColor(Color.GREEN);
+			pathLength++;
 			getPath();
 			stopwatch.stop();
 			simTimer.stop();
@@ -436,7 +438,7 @@ public class Controller {
 				// Search each neighbour
 				for (int i = 0; i < currentCellNeighbours.size(); i++) {
 					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
-					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall()) {
+					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall() && !(currentCellNeighbours.get(i)==startCell)) {
 						currentCellNeighbours.get(i).setVisited(true);
 						currentCellNeighbours.get(i).setPreviousCell(currentCell);
 						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
@@ -874,6 +876,7 @@ public class Controller {
 			if(event.isMiddleButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()) {
 				if(weightValue == 1) {
 					cell.setCostG(2);
+					weightValue = cell.getCostG();
 				}
 				else {
 					cell.setCostG(weightValue);
@@ -911,6 +914,7 @@ public class Controller {
 			if(event.isMiddleButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()) {
 				if(weightValue == 1) {
 					cell.setCostG(2);
+					weightValue = cell.getCostG();
 				}
 				else {
 					cell.setCostG(weightValue);
