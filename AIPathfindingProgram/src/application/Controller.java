@@ -43,19 +43,17 @@ public class Controller {
 	private int gridSize = 800;
 	private int gridRowsColumns = 15;
 	private int cellSize = gridSize / gridRowsColumns;
-	private String selectedAlgorithm = "Rsandom Search";
+	private String selectedAlgorithm = "Random Search";
 	private boolean running = false;
 	private Timeline simTimer;
 	private int simSpeed = 100;
-	
+	private int weightValue = 1;
 	private boolean setStartPosition = false;
 	private boolean setEndPosition = false;
-	private int drawWeightValue = 1;
 	
 	private Rectangle rectBackground = new Rectangle(860, 55, 710, 803);
 	private GridPane grid = new GridPane();
 	private ArrayList<Cell> cells = new ArrayList<Cell>();
-	private ArrayList<Cell> currentCellsQueue = new ArrayList<Cell>();
 	private ArrayList<Cell> currentCellNeighbours = new ArrayList<Cell>();
 	private Cell startCell;
 	private Cell endCell;
@@ -113,7 +111,7 @@ public class Controller {
 	private CheckBox[] costCheckBoxes = {
 		new CheckBox("F Cost - Total cost of G and H"),
 		new CheckBox("G Cost - Distance from start to current cell"),
-		new CheckBox("H Cost - Distance from current cell to goal")
+		new CheckBox("H Cost - Distance from current cell to end")
 	};
 	
 	// Timer
@@ -140,6 +138,7 @@ public class Controller {
  					button[i].setDisable(true);
  				}
  			}
+ 			button[1].setDisable(false);
  			gridSizeSlider.setDisable(true);
  			grid.setDisable(true);
  			running = true;
@@ -153,6 +152,7 @@ public class Controller {
 			for(int i = 0; i <= button.length-2; i++) {
 				button[i].setDisable(false);
 			}
+			button[1].setDisable(true);
 			gridSizeSlider.setDisable(false);
 			grid.setDisable(false);
 			running = false;
@@ -196,13 +196,8 @@ public class Controller {
 		for(int y = 0; y < gridRowsColumns; y++) {
 			for(int x = 0; x < gridRowsColumns; x++) {
 				// xPos, yPos, size, colour, isStartPos, isEndpos , isWall, isVisited, isWeight, previous cell, weightValue, f cost, g cost, h cost
-				cells.add(new Cell(x, y, cellSize, Color.LIGHTGREY, false, false, false, false, false, null, 0, 1 ,1 ,0));
+				cells.add(new Cell(x, y, cellSize, Color.LIGHTGREY, false, false, false, false, false, null, 1, 0, 1, 0));
 			}
-		}
-		// Add each cell to the grid and give it functions
-		for(int i = 0; i < cells.size(); i++) {
-			grid.add(cells.get(i), cells.get(i).getXPos(), cells.get(i).getYPos());
-			gridDrawer(cells.get(i));
 		}
 		
 		// Set top right as end position
@@ -211,8 +206,26 @@ public class Controller {
 		// Set bottom left as start position
 		startCell = cells.get((numberOfCells)-gridRowsColumns);
 		setStartPosition(cells.get((numberOfCells)-gridRowsColumns));
+				
+		for(int i = 0; i < cells.size(); i++) {
+			// Calculate cost of each cell
+			calculateCostH(cells.get(i));
+			// Add each cell to the grid and give it functions
+			grid.add(cells.get(i), cells.get(i).getXPos(), cells.get(i).getYPos());
+			gridDrawer(cells.get(i));
+		}
 		
 		showCellCostLabels();
+	}
+	
+	// Calculate cost/distance of cell
+	private void calculateCostH(Cell cell) {
+		cell.setCostH(getDistance(cell, endCell));
+	}
+	
+	// Manhattan (up, down, left, right)
+	private int getDistance(Cell from, Cell to) {
+		return Math.abs(from.getYPos() - to.getYPos()) + Math.abs(from.getXPos() - to.getXPos());
 	}
 	
 	private void clearVisitedCells() {
@@ -220,15 +233,15 @@ public class Controller {
 		for(int i = 0; i < cells.size(); i++) {
 			cells.get(i).setVisited(false);
 			cells.get(i).setPreviousCell(null);
-			if (!(cells.get(i).isStartPos || cells.get(i).isEndPos || cells.get(i).isWall)) {
+			if (!(cells.get(i).getIsStartPos() || cells.get(i).getIsEndPos() || cells.get(i).getIsWall())) {
 				cells.get(i).setColor(Color.LIGHTGREY);
 			}
-			if (!cells.get(i).isWeight && !(cells.get(i) == startCell)) {
+			if (!cells.get(i).getIsWeight() && !(cells.get(i) == startCell)) {
 				cells.get(i).setCostG(1);
 			}
-			if (cells.get(i).isWeight) {
+			if (cells.get(i).getIsWeight()) {
 				cells.get(i).setCostG(cells.get(i).getWeightValue());
-				setCellWeightColour(cells.get(i));
+				cells.get(i).setColor(Color.web("#FFBE72"));
 			}
 		}
 		numberOfVisitedCells = 0;
@@ -279,7 +292,7 @@ public class Controller {
 		label[9].setText("Moves: " + numberOfMoves);
 		
 		// Track number of visited cells
-		if (!cell.isVisited) {
+		if (!cell.getIsVisited()) {
 			cell.setColor(Color.DEEPSKYBLUE);	
 			cell.setVisited(true);
 			cell.setPreviousCell(currentCell);
@@ -315,16 +328,16 @@ public class Controller {
 			
 			// Get random direction
 			int randomInt = (int) (Math.random() * 4);
-			if(randomInt == 0 && currentCell.getYPos()>0 && !upNeighbour.isWall) {
+			if(randomInt == 0 && currentCell.getYPos()>0 && !upNeighbour.getIsWall()) {
 				searchCell(upNeighbour);
 			}
-			else if(randomInt == 1 && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.isWall) {
+			else if(randomInt == 1 && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.getIsWall()) {
 				searchCell(downNeighbour);
 			}
-			else if(randomInt == 2 && currentCell.getXPos()>0 && !leftNeighbour.isWall) {
+			else if(randomInt == 2 && currentCell.getXPos()>0 && !leftNeighbour.getIsWall()) {
 				searchCell(leftNeighbour);
 			}
-			else if(randomInt == 3 && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.isWall) {
+			else if(randomInt == 3 && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.getIsWall()) {
 				searchCell(rightNeighbour);
 			}
 			
@@ -350,13 +363,22 @@ public class Controller {
 				
 				currentCell = queue.remove();
 				currentCell.setColor(Color.SKYBLUE);
-
+				
+				// Reached the end so stop and record the results to the table
+				if (currentCell == endCell) {
+					endCell.setColor(Color.GREEN);					
+					getPath();					
+					stopwatch.stop();
+					simTimer.stop();
+					updateResultsTable();
+				}
+				
 				// Visit surrounding cells
 				getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
 				// Search each neighbour
 				for (int i = 0; i < currentCellNeighbours.size(); i++) {
 					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
-					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
+					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall()) {
 						currentCellNeighbours.get(i).setVisited(true);
 						currentCellNeighbours.get(i).setPreviousCell(currentCell);
 						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
@@ -366,23 +388,6 @@ public class Controller {
 						numberOfVisitedCells++;
 						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);	
 					}
-//					// Reached the end so stop and record the results to the table
-//					if (currentCellNeighbours.get(i) == endCell) {
-//						currentCellNeighbours.get(i).setColor(Color.GREEN);					
-//						getPath();					
-//						stopwatch.stop();
-//						simTimer.stop();
-//						updateResultsTable();
-//					}
-				}
-				
-				// Reached the end so stop and record the results to the table
-				if (currentCell == endCell) {
-					endCell.setColor(Color.GREEN);					
-					getPath();					
-					stopwatch.stop();
-					simTimer.stop();
-					updateResultsTable();
 				}
 				
 				// Highlight current cell
@@ -424,7 +429,7 @@ public class Controller {
 				currentCell.setColor(Color.SKYBLUE);
 				
 				// Visit current cell first
-				if(!currentCell.isVisited && !currentCell.isWall) {
+				if(!currentCell.getIsVisited() && !currentCell.getIsWall()) {
 					currentCell.setVisited(true);
 					if(!stack.isEmpty()) {
 						//currentCell.setPreviousCell(stack.firstElement());
@@ -449,7 +454,7 @@ public class Controller {
 				// Search each neighbour
 				for (int i = 0; i < currentCellNeighbours.size(); i++) {
 					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
-					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
+					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall()) {
 						//currentCellNeighbours.get(i).setVisited(true);
 						currentCellNeighbours.get(i).setPreviousCell(currentCell);
 						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
@@ -459,22 +464,16 @@ public class Controller {
 						numberOfVisitedCells++;
 						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);	
 					}
-//					// Reached the end so stop and record the results to the table
-//					if (currentCellNeighbours.get(i) == endCell) {
-//						currentCellNeighbours.get(i).setColor(Color.GREEN);					
-//						getPath();					
-//						stopwatch.stop();
-//						simTimer.stop();
-//						updateResultsTable();
-//					}
 				}
 				// Highlight current cell
 				if(!stack.isEmpty()) {
 					stack.lastElement().setColor(Color.ORANGE);
 				}
+				
 				// Keep the start and end cell visible
 				startCell.setColor(Color.RED);
 				endCell.setColor(Color.GREEN);
+				
 			}
 			// No cells to search so stop
 			else {
@@ -488,21 +487,91 @@ public class Controller {
 		simTimer.play();
 	}
 	
-	int distance = 0;
 	private void searchDijkstra() {
 		
 		// https://www.javatpoint.com/dijkstra-algorithm-java
-			
-//		for(int i = 0; i < cells.size(); i++) {
-//			cells.get(i).setCostF(1);
-//		}
-//		startCell.setCostF(0);
 		
 		// Uses a priority queue to follow path with best cost by comparing costs of cells
 		PriorityQueue<Cell> queue = new PriorityQueue<Cell>(numberOfCells, (cellA,cellB) -> cellA.getCostG() - cellB.getCostG());
 		// Add starting cell to queue
 		queue.add(startCell);
 		
+		simTimer = new Timeline(new KeyFrame(Duration.millis(simSpeed), event -> {	
+			
+			// Are there any cells to search
+			if(!queue.isEmpty()) {				
+				// Track number of moves
+				numberOfMoves += 1;
+				label[9].setText("Moves: " + numberOfMoves);
+				
+				currentCell = queue.peek();
+				currentCell.setColor(Color.SKYBLUE);
+
+				// Reached the end so stop and record the results to the table
+				if (currentCell == endCell) {
+					endCell.setColor(Color.GREEN);					
+					getPath();					
+					stopwatch.stop();
+					simTimer.stop();
+					updateResultsTable();
+				}
+				
+				// Visit surrounding cells
+				getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
+				// Search each neighbour
+				for (int i = 0; i < currentCellNeighbours.size(); i++) {
+					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
+					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall()) {
+						
+						//if(!queue.contains(currentCellNeighbours.get(i))) {
+							currentCellNeighbours.get(i).setVisited(true);
+							currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
+							currentCellNeighbours.get(i).setPreviousCell(currentCell);
+							currentCellNeighbours.get(i).setCostG(currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
+							queue.add(currentCellNeighbours.get(i));
+						//}
+						/*
+						else {
+							if(currentCellNeighbours.get(i).getCostG() > currentCell.getCostG() + currentCellNeighbours.get(i).getCostG()) {
+								currentCellNeighbours.get(i).setVisited(true);
+								currentCellNeighbours.get(i).setColor(Color.BLUE);
+								currentCellNeighbours.get(i).setPreviousCell(currentCell);
+								currentCellNeighbours.get(i).setCostG(currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
+							}
+						}
+						*/
+						// Show weighted cells
+						if(currentCellNeighbours.get(i).getIsWeight()) {
+							currentCellNeighbours.get(i).setColor(Color.ROYALBLUE);
+						}
+						// Track number of visited cells
+						numberOfVisitedCells++;
+						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);						
+					}
+					queue.remove(currentCell);
+				}
+				// Highlight current cell
+				if(!queue.isEmpty()) {
+					queue.peek().setColor(Color.ORANGE);
+				}
+				// Keep the start cell visible
+				startCell.setColor(Color.RED);
+				endCell.setColor(Color.GREEN);
+			}
+			// No cells to search so stop
+			else {
+				stopwatch.stop();
+				simTimer.stop();
+				label[8].setText("Path Length: No Path Found");
+			}
+			
+		}));
+		simTimer.setCycleCount(-1);
+		simTimer.play();
+		
+		
+		
+		/*
 		simTimer = new Timeline(new KeyFrame(Duration.millis(simSpeed), event -> {	
 			
 			// Are there any cells to search
@@ -536,18 +605,18 @@ public class Controller {
 				// Search each neighbour
 				for (int i = 0; i < currentCellNeighbours.size(); i++) {
 					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
-					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
-						distance = (currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
+					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall()) {
+						int distance = (currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
 						
 						if(distance >= currentCellNeighbours.get(i).getCostG()) {
 							currentCellNeighbours.get(i).setVisited(true);
 							currentCellNeighbours.get(i).setPreviousCell(currentCell);
 							currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
-							currentCellNeighbours.get(i).setCostG(distance);
+							//currentCellNeighbours.get(i).setCostG(distance);
 							
 							// Show weighted cells
-							if(currentCellNeighbours.get(i).isWeight) {
-								currentCellNeighbours.get(i).setColor(Color.DODGERBLUE);
+							if(currentCellNeighbours.get(i).getIsWeight()) {
+								currentCellNeighbours.get(i).setColor(Color.ROYALBLUE);
 							}
 						}
 						queue.add(currentCellNeighbours.get(i));
@@ -571,117 +640,34 @@ public class Controller {
 		}));
 		simTimer.setCycleCount(-1);
 		simTimer.play();
-		
-	}
-	
-	private int getDistance(Cell from, Cell to) {
-		// Multiply by 10 so we aren't working with decimals
-		return (int) Math.sqrt((from.getXPos()-to.getXPos())*(from.getXPos()-to.getXPos()) + (from.getYPos() - to.getYPos())*(from.getYPos()-to.getYPos()))*10;
-	}
-	
-	private void searchAStar1() {
-		/*
-		getNeighbours(currentCell.getXPos(), currentCell.getYPos());
-		
-		if (key.getCode() == KeyCode.UP && currentCell.getYPos()>0 && !upNeighbour.isWall) {
-			visitedCell = currentCell;
-			currentCell = upNeighbour;
-			searchCell();
-		}
 		*/
-		
-		ArrayList<Cell> openSet = new ArrayList<Cell>();
-		ArrayList<Cell> closedSet = new ArrayList<Cell>();
-		
-		openSet.add(startCell);
-		
-		for(int i = 0; i < closedSet.size(); i++) {
-			closedSet.get(i).setColor(Color.SKYBLUE);
-		}
-		for(int i = 0; i < openSet.size(); i++) {
-			openSet.get(i).setColor(Color.DEEPSKYBLUE);
-		}
-		
-		while(running) {
-			if(!openSet.isEmpty()) {
-				// Keep searching
-				
-				// Find lowest path?
-				int winner = 0;
-				for(int i = 0; i < openSet.size(); i++) {
-					if(openSet.get(i).getCostF() < openSet.get(winner).getCostF()) {
-						winner = i;
-					}
-				}
-				currentCell = openSet.get(winner);
-				
-				
-				// Path found
-				if(currentCell == endCell) {
-					running = false;
-				}
-				
-				openSet.remove(currentCell);
-				closedSet.add(currentCell);
-				
-				getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());	
-				for(int i = 0; i < currentCellNeighbours.size(); i++) {
-					Cell neighbour = currentCellNeighbours.get(i);
-					
-					if(!closedSet.contains(neighbour)) {
-						int tempG = currentCell.getCostG() + 1;
-						
-						// Is there a better path
-						if(openSet.contains(neighbour)) {
-							if(tempG < neighbour.getCostG()) {
-								neighbour.setCostG(tempG);
-							}
-						}
-						else {
-							neighbour.setCostG(tempG);
-							openSet.add(neighbour);
-						}
-						
-						// Make guess
-						//neighbour.setH(heuristic(neighbour,endCell));
-						//neighbour.setCostF(neighbour.getCostG() + neighbour.getCostH());
-						
-					}
-					
-					
-				}
-				
-				
-			}
-			else {
-				// No solution
-				
-			}
-		}
-		
 	}
 	
 	private void searchAStar() {
-		// http://wecode4fun.blogspot.com/2015/05/a-algorithm-or-star-algorithm-in-javafx.html
-		// https://en.wikipedia.org/wiki/A*_search_algorithms
-		// https://www.geeksforgeeks.org/a-search-algorithm/
+
+		// https://www.mygreatlearning.com/blog/a-search-algorithm-in-artificial-intelligence/
 		
-		ArrayList<Cell> openSet = new ArrayList<Cell>();
-		PriorityQueue<Cell> closedSet = new PriorityQueue<Cell>();
+		// Uses a priority queue to follow path with best cost by comparing costs of cells
+		PriorityQueue<Cell> openList = new PriorityQueue<Cell>(numberOfCells, (cellA,cellB) -> cellA.getCostF() - cellB.getCostF());
+		// Cells visited
+		PriorityQueue<Cell> closedList = new PriorityQueue<Cell>(numberOfCells, (cellA,cellB) -> cellA.getCostF() - cellB.getCostF());
 		
-		openSet.add(startCell);
-		startCell.setCostH(getDistance(startCell, endCell));
-		//System.out.println(getDistance(startCell, endCell));
-	
+		// Add starting cell to queue
+		openList.add(startCell);
+		
 		simTimer = new Timeline(new KeyFrame(Duration.millis(simSpeed), event -> {	
 			
-			if(!openSet.isEmpty()) {
+			// Are there any cells to search
+			if(!openList.isEmpty()) {				
+				// Track number of moves
+				numberOfMoves += 1;
+				label[9].setText("Moves: " + numberOfMoves);
 				
-				
-				currentCell = openSet.get(0);
-				
+				currentCell = openList.peek();
+				currentCell.setColor(Color.SKYBLUE);
+
 				// Reached the end so stop and record the results to the table
-				if(currentCell == endCell ) {
+				if (currentCell == endCell) {
 					endCell.setColor(Color.GREEN);					
 					getPath();					
 					stopwatch.stop();
@@ -689,32 +675,68 @@ public class Controller {
 					updateResultsTable();
 				}
 				
-				openSet.remove(currentCell);
-				closedSet.add(currentCell);
-				
-				// Get surrounding cells
+				// Visit surrounding cells
 				getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
 				// Search each neighbour
 				for (int i = 0; i < currentCellNeighbours.size(); i++) {
 					// Add neighbouring cell to the queue if not visited or a wall and store previous cell
-					if(!currentCellNeighbours.get(i).isVisited && !currentCellNeighbours.get(i).isWall) {
-						//currentCellNeighbours.get(i).setVisited(true);
-						currentCellNeighbours.get(i).setPreviousCell(currentCell);
-						currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
-						openSet.add(currentCellNeighbours.get(i));
+					if(!currentCellNeighbours.get(i).getIsVisited() && !currentCellNeighbours.get(i).getIsWall()) {
+								
+						if(!openList.contains(currentCellNeighbours.get(i)) && !closedList.contains(currentCellNeighbours.get(i))) {
+							currentCellNeighbours.get(i).setVisited(true);
+							currentCellNeighbours.get(i).setColor(Color.DEEPSKYBLUE);
+							currentCellNeighbours.get(i).setPreviousCell(currentCell);
+							currentCellNeighbours.get(i).setCostG(currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
+							openList.add(currentCellNeighbours.get(i));
+						}
 						
+						else {
+							if(currentCellNeighbours.get(i).getCostG() > currentCell.getCostG() + currentCellNeighbours.get(i).getCostG()) {
+								currentCellNeighbours.get(i).setVisited(true);
+								currentCellNeighbours.get(i).setColor(Color.BLUE);
+								currentCellNeighbours.get(i).setPreviousCell(currentCell);
+								currentCellNeighbours.get(i).setCostG(currentCell.getCostG() + currentCellNeighbours.get(i).getCostG());
+								
+								if(closedList.contains(currentCellNeighbours.get(i))) {
+									closedList.remove(currentCellNeighbours.get(i));
+									openList.add(currentCellNeighbours.get(i));
+								}
+							}
+						}
+						
+						// Show weighted cells
+						if(currentCellNeighbours.get(i).getIsWeight()) {
+							currentCellNeighbours.get(i).setColor(Color.ROYALBLUE);
+						}
 						// Track number of visited cells
 						numberOfVisitedCells++;
-						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);	
+						label[6].setText("Cells Visited: " + numberOfVisitedCells + " / " + numberOfCells);						
 					}
+					openList.remove(currentCell);
+			        closedList.add(currentCell);
 				}
+				// Highlight current cell
+				if(!openList.isEmpty()) {
+					openList.peek().setColor(Color.ORANGE);
+				}
+				// Keep the start cell visible
+				startCell.setColor(Color.RED);
+				endCell.setColor(Color.GREEN);
 			}
+			// No cells to search so stop
+			else {
+				stopwatch.stop();
+				simTimer.stop();
+				label[8].setText("Path Length: No Path Found");
+			}
+			
 		}));
 		simTimer.setCycleCount(-1);
 		simTimer.play();
 	}
 	
 	private void gridButtonFunctions() {	
+		button[1].setDisable(true);
 		// Start 
 		button[0].setOnAction(event -> {
 			running = true;
@@ -826,16 +848,16 @@ public class Controller {
 		if (running) {
 			getNeighbours(currentCell, currentCell.getXPos(), currentCell.getYPos());
 			
-			if (key.getCode() == KeyCode.UP && currentCell.getYPos()>0 && !upNeighbour.isWall) {
+			if (key.getCode() == KeyCode.UP && currentCell.getYPos()>0 && !upNeighbour.getIsWall()) {
 				searchCell(upNeighbour);
 			}
-			if (key.getCode() == KeyCode.DOWN && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.isWall) {
+			if (key.getCode() == KeyCode.DOWN && currentCell.getYPos()<gridRowsColumns-1 && !downNeighbour.getIsWall()) {
 				searchCell(downNeighbour);
 			}
-			if (key.getCode() == KeyCode.LEFT && currentCell.getXPos()>0 && !leftNeighbour.isWall) {
+			if (key.getCode() == KeyCode.LEFT && currentCell.getXPos()>0 && !leftNeighbour.getIsWall()) {
 				searchCell(leftNeighbour);
 			}
-			if (key.getCode() == KeyCode.RIGHT && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.isWall) {
+			if (key.getCode() == KeyCode.RIGHT && currentCell.getXPos()<gridRowsColumns-1 && !rightNeighbour.getIsWall()) {
 				searchCell(rightNeighbour);
 			}
 		}
@@ -855,13 +877,15 @@ public class Controller {
 		*/
 		startCell.setStartPos(false);
 		startCell.setVisited(false);
+		startCell.setCostG(1);
 		startCell.setColor(Color.LIGHTGREY);
 		
 		// Set new start position
 		cell.setStartPos(true);
 		cell.setVisited(true);
-		cell.setColor(Color.RED);	
+		cell.setWeight(false);
 		cell.setCostG(0);
+		cell.setColor(Color.RED);
 		startCell = cell;
 		setStartPosition = false;
 	}
@@ -904,24 +928,22 @@ public class Controller {
 				clearVisitedCells();
 			}
 						
-			if(!cell.isStartPos && !cell.isEndPos  && !cell.isWall) {
+			if(!cell.getIsStartPos() && !cell.getIsEndPos()  && !cell.getIsWall()) {
 				// Scroll up or down changes weight value
-				if(event.getDeltaY() >= 1 && cell.getCostG() <= 100) {
+				if(event.getDeltaY() >= 1 && cell.getCostG() < 100) {
 					cell.setCostG(cell.getCostG()+1);
+					cell.setWeight(true);
+					cell.setColor(Color.web("#FFBE72"));
 				}
 				if(event.getDeltaY() <= -1 && cell.getCostG() > 1) {
 					cell.setCostG(cell.getCostG()-1);
 				}
-				drawWeightValue = cell.getCostG();
-				cell.setCostG(drawWeightValue);
-				cell.setWeightValue(cell.getCostG());
-				if(cell.getCostG()!=1) {
-					cell.setWeight(true);
-				}
-				else {
+				if(cell.getCostG()==1) {
 					cell.setWeight(false);
+					cell.setColor(Color.LIGHTGREY);
 				}
-				setCellWeightColour(cell);
+				cell.setWeightValue(cell.getCostG());
+				weightValue = cell.getCostG();
 			}
 		});
 		
@@ -932,95 +954,93 @@ public class Controller {
 			}
 			
 			// Left mouse click draws to the grid
-			if(event.isPrimaryButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall) {
+			if(event.isPrimaryButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()  && !cell.getIsWall()) {
 				// Place start position
 				if(setStartPosition) {
 					setStartPosition(cell);
+					for(int i = 0; i < cells.size(); i++) {
+						calculateCostH(cells.get(i));
+					}
 				}
 				// Place end position
 				else if(setEndPosition) {
 					setEndPosition(cell);
+					for(int i = 0; i < cells.size(); i++) {
+						calculateCostH(cells.get(i));
+					}
 				}
 				// Place wall
 				else {
 					cell.setColor(Color.GREY);
 					cell.setWall(true);
+					cell.setWeight(false);
 					cell.setCostG(1);
-					cell.setWeightValue(cell.getCostG());
 					numberOfWalls += 1;
 					label[7].setText("Walls: " + numberOfWalls);
 				}
 			};
-			// Right mouse click removes walls
-			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
+			// Right mouse click removes walls and resets weight
+			if(event.isSecondaryButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()) {
 				cell.setColor(Color.LIGHTGREY);
 				cell.setCostG(1);
-				cell.setWeightValue(cell.getCostG());
 				cell.setWeight(false);
-				if(cell.isWall) {
+				if(cell.getIsWall()) {
 					numberOfWalls -= 1;
 					label[7].setText("Walls: " + numberOfWalls);
 					cell.setWall(false);
 				}
 			};
-			
-			// Middle mouse click adds weight to grid
-			if(event.isMiddleButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall && !cell.isWeight) {
-				cell.setCostG(drawWeightValue);
-				cell.setWeightValue(cell.getCostG());
+			// Add weight
+			if(event.isMiddleButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()) {
+				if(weightValue == 1) {
+					cell.setCostG(2);
+				}
+				else {
+					cell.setCostG(weightValue);
+				}
 				cell.setWeight(true);
-				setCellWeightColour(cell);
+				cell.setWeightValue(cell.getCostG());
+				cell.setColor(Color.web("#FFBE72"));
 			}
 		});
 		
 		// Allow user to drag the mouse to draw on the grid
 		cell.setOnDragDetected(mouseEvent -> cell.startFullDrag());
 		cell.setOnMouseDragEntered(event -> {
-			if(event.isPrimaryButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall) {
+			// Add wall
+			if(event.isPrimaryButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()  && !cell.getIsWall()) {
 				cell.setColor(Color.GREY);
 				cell.setWall(true);
 				cell.setCostG(1);
-				cell.setWeightValue(cell.getCostG());
+				cell.setWeight(false);
 				numberOfWalls += 1;
 				label[7].setText("Walls: " + numberOfWalls);
 			};
-			if(event.isSecondaryButtonDown() && !cell.isStartPos && !cell.isEndPos) {
+			// Remove wall/reset weight
+			if(event.isSecondaryButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()) {
 				cell.setColor(Color.LIGHTGREY);
 				cell.setCostG(1);
-				cell.setWeightValue(cell.getCostG());
 				cell.setWeight(false);
-				if(cell.isWall) {
+				if(cell.getIsWall()) {
 					numberOfWalls -= 1;
 					label[7].setText("Walls: " + numberOfWalls);
 					cell.setWall(false);
 				}
 			};
-			
-			// Middle mouse click adds weight to grid
-			if(event.isMiddleButtonDown() && !cell.isStartPos && !cell.isEndPos  && !cell.isWall && !cell.isWeight) {
-				cell.setCostG(drawWeightValue);
-				cell.setWeightValue(cell.getCostG());
+			// Add weight
+			if(event.isMiddleButtonDown() && !cell.getIsStartPos() && !cell.getIsEndPos()) {
+				if(weightValue == 1) {
+					cell.setCostG(2);
+				}
+				else {
+					cell.setCostG(weightValue);
+				}
 				cell.setWeight(true);
-				setCellWeightColour(cell);
+				cell.setWeightValue(cell.getCostG());
+				cell.setColor(Color.web("#FFBE72"));
 			}
 		});
 		
-	}
-
-	// Colour cells with higher weight darker
-	private void setCellWeightColour(Cell cell) {
-		if(cell.getCostG()==1) {
-			cell.setColor(Color.LIGHTGREY);
-		}
-		else if(cell.getCostG()<10) {
-			cell.setColor(Color.web("#FFDCA2"));
-		}
-		else if(cell.getCostG()>=10 & cell.getCostG()<25) {
-			cell.setColor(Color.web("#FFBE72"));
-		}
-		else if(cell.getCostG()>=25) {
-			cell.setColor(Color.web("#FD8F52"));
-		}
 	}
 	
 	// When end point is reached, we add the result to the results table

@@ -105,7 +105,7 @@ public class Cell extends StackPane {
 		return isWall;
 	}
 	
-	public boolean getIsVisitied() {
+	public boolean getIsVisited() {
 		return isVisited;
 	}
 	
