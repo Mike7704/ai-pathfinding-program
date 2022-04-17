@@ -1,9 +1,6 @@
 package application;
 
-import java.util.ArrayList;
-
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;

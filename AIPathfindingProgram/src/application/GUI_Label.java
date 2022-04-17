@@ -26,11 +26,7 @@ public class GUI_Label extends Label {
 		setPrefWidth(width);
 		setPrefHeight(height);
 		setAlignment(pos);
-
-		//setStyle("-fx-font-size: 30;");
-		//setPadding(new Insets(40,40,40,40));
 		setWrapText(true);
-		//initializeButtonListeners();
 		setVisible(visible);
 	}
 }
