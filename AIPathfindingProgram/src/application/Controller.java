@@ -269,16 +269,15 @@ public class Controller {
 	private void getPath() {
 		// Draw path from end to start node by following previous/parent node
 		while(currentNode != startNode) {
-			currentNode.setColor(Color.YELLOW);
+			currentNode.setColor(Color.YELLOW);			
+			pathLength+= currentNode.getCostG();			
 			currentNode = currentNode.getParentNode();
-			pathLength++;
-			
-			// Account for weight
-			if(selectedAlgorithm.equals("Dijkstra") || selectedAlgorithm.equals("A* Search")) {
-				pathLength = endNode.getCostG();
-			}		
-			label[8].setText("Path Length: " + pathLength);
 		}
+		// Account for weight
+		if(selectedAlgorithm.equals("Dijkstra") || selectedAlgorithm.equals("A* Search")) {
+			pathLength = endNode.getCostG();
+		}		
+		label[8].setText("Path Length: " + pathLength);
 	}
 	
 	// Checks node properties
