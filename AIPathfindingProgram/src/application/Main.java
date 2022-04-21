@@ -1,17 +1,13 @@
 package application;
 
 import javafx.application.Application;
-import javafx.geometry.Pos;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
 
 public class Main extends Application {
 	
-	// Initialise Program
+	// Initialise program
 	@Override
 	public void start(Stage stage) {
 		try {

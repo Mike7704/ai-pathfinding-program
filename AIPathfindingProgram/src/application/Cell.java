@@ -13,11 +13,11 @@ public class Cell extends StackPane {
 	private double size;
 	private Color color;
 	public boolean isStartPos, isEndPos, isWall, isWeight, isVisited;
-	private Cell previousCell;
-	private int weightValue, costF, costG, costH; // (A*) f = g + h; g = distance from start to current cell; h = distance from current cell to goal
+	private Cell parentNode;
+	private int weightValue, costF, costG, costH; // (A*) f = g + h; g = distance from start node to current node; h = distance from current node to end node
 	private GUI_Label costFLabel, costGLabel, costHLabel;
 		
-	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isWeight, boolean isVisited, Cell previousCell, int weightValue, int costF, int costG, int costH) {
+	public Cell(int xPos, int yPos, double size, Color color, boolean isStartPos, boolean isEndPos, boolean isWall, boolean isWeight, boolean isVisited, Cell parentNode, int weightValue, int costF, int costG, int costH) {
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.size = size;
@@ -27,7 +27,7 @@ public class Cell extends StackPane {
 		this.isWall = isWall;
 		this.isWeight = isWeight;
 		this.isVisited = isVisited;
-		this.previousCell = previousCell;
+		this.parentNode = parentNode;
 		this.weightValue = weightValue;
 		this.costF = costF;
 		this.costG = costG;
@@ -50,64 +50,50 @@ public class Cell extends StackPane {
 		costGLabel.setOpacity(0.5);
 		costHLabel.setOpacity(0.5);
 		costFLabel.setOpacity(0.5);
-		//getChildren().addAll(costGLabel,costHLabel,costFLabel);
 		
 	}
 	
 	public void setStartPos(boolean value) {
 		this.isStartPos = value;
 	}
-	
 	public void setEndPos(boolean value) {
 		this.isEndPos = value;
 	}
-
 	public void setWall(boolean value) {
 		this.isWall = value;
 	}
-	
 	public void setVisited(boolean value) {
 		this.isVisited = value;
 	}
-	
-	public void setPreviousCell(Cell cell) {
-		this.previousCell = cell;
+	public void setParentNode(Cell cell) {
+		this.parentNode = cell;
 	}
-	
 	public void setColor(Color color) {
 		cell.setFill(color);
 	}
-	
 	public int getXPos() {
 		return xPos;
 	}
-	
 	public int getYPos() {
 		return yPos;
 	}
-	
 	public Color getColor() {
 		return color;
 	}
-	
 	public boolean getIsStartPos() {
 		return isStartPos;
 	}
-	
 	public boolean getIsEndPos() {
 		return isEndPos;
 	}
-	
 	public boolean getIsWall() {
 		return isWall;
 	}
-	
 	public boolean getIsVisited() {
 		return isVisited;
 	}
-	
-	public Cell getPreviousCell() {
-		return previousCell;
+	public Cell getParentNode() {
+		return parentNode;
 	}
 	
 	// Weight
@@ -127,7 +113,7 @@ public class Cell extends StackPane {
 		return isWeight;
 	}
 	
-	// A* cost values
+	// Cost values
 	public void setCostF() {
 		this.costF = costG + costH;
 		costFLabel.setText(costF + "");
@@ -142,7 +128,6 @@ public class Cell extends StackPane {
 		costHLabel.setText(costH + "");
 		setCostF();
 	}
-	// A*
 	public int getCostF() {
 		return costF;
 	}

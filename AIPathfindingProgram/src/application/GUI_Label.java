@@ -30,3 +30,4 @@ public class GUI_Label extends Label {
 		setVisible(visible);
 	}
 }
+

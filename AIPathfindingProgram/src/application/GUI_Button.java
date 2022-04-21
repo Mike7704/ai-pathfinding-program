@@ -19,3 +19,4 @@ public class GUI_Button extends Button {
 		setFocusTraversable(false); // Disable selecting buttons using keys
 	}
 }
+
